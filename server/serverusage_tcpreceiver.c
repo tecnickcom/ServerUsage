@@ -1,9 +1,9 @@
 /*
 //=============================================================================+
-// File name   : serverusage_tcpreceiver.c
+// File name   : serverusage_tcpreceiver_test.c
 // Begin       : 2012-02-14
 // Last Update : 2012-05-17
-// Version     : 4.1.0
+// Version     : 4.2.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -45,11 +45,12 @@
 */
 
 // TO COMPILE (requires sqlite-devel):
-// gcc -O3 -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -fno-strict-aliasing -fwrapv -fPIC --param=ssp-buffer-size=4 -D_GNU_SOURCE -o serverusage_tcpreceiver.bin serverusage_tcpreceiver.c -lpthread -lsqlite3
+// gcc -O3 -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -fno-strict-aliasing -fwrapv -fPIC --param=ssp-buffer-size=4 -D_GNU_SOURCE -o serverusage_tcpreceiver_test.bin serverusage_tcpreceiver_test.c -lpthread -lsqlite3
 
 // USAGE EXAMPLES:
-// ./serverusage_tcpreceiver.bin PORT MAX_CONNECTIONS "database"
-// ./serverusage_tcpreceiver.bin 9930 100 "/var/lib/serverusage/serverusage.db"
+// sqlite3 serverusage.db < serverusage_database.sql
+// ./serverusage_tcpreceiver_test.bin PORT MAX_CONNECTIONS "database"
+// ./serverusage_tcpreceiver_test.bin 9930 100 "/home/makerpm/ServerUsageTEST/serverusage.db"
 
 // NOTE: For the SQLite table used to to store data, please consult the SQL file on this project.
 
@@ -197,12 +198,6 @@ void *connection_thread(void *cargs) {
 	memset(buf, 0, BUFLEN);
 	memset(lastrow, 0, BUFLEN);
 
-	// begin the transaction (transaction will improve insert performances)
-	if (sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
-		perror(ErrMsg);
-		sqlite3_free(ErrMsg);
-	}
-
 	// receive a message from ns and put data int buf (limited to BUFLEN characters)
 	while (read(arg.socket_conn, buf, READBUFLEN) > 0) {
 
@@ -257,12 +252,6 @@ void *connection_thread(void *cargs) {
 		memset(buf, 0, BUFLEN);
 
 	} // end read TCP
-
-	// commit the transaction
-	if (sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
-		perror(ErrMsg);
-		sqlite3_free(ErrMsg);
-	}
 
 	// close connection
 	close(arg.socket_conn);
@@ -369,6 +358,12 @@ int main(int argc, char *argv[]) {
 	// listen for connections
 	listen(s, maxconn);
 
+	// begin the first transaction (we use transaction to improve performances)
+	if (sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
+		perror(ErrMsg);
+		sqlite3_free(ErrMsg);
+	}
+
 	// forever
 	while (1)  {
 
@@ -379,6 +374,18 @@ int main(int argc, char *argv[]) {
 			// retry after 1 second
 			sleep(1);
 		} else {
+
+			// commit the current transaction
+			if (sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
+				perror(ErrMsg);
+				sqlite3_free(ErrMsg);
+			}
+			// begin the next transaction
+			if (sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
+				perror(ErrMsg);
+				sqlite3_free(ErrMsg);
+			}
+
 			// prepare data for the thread
 			cargs[tn].socket_conn = ns;
 			memset(cargs[tn].clientip, 0, 40);
@@ -399,6 +406,12 @@ int main(int argc, char *argv[]) {
 		}
 
 	} // end of for loop
+
+	// commit last transaction
+	if (sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
+		perror(ErrMsg);
+		sqlite3_free(ErrMsg);
+	}
 
 	// close socket
 	close(s);

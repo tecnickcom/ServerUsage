@@ -1,3 +1,6 @@
+4.2.0 (2012-05-17)
+	- Bug related to nested transactions were fixed.
+
 4.1.0 (2012-05-17)
 	- C scripts were analysed and optimised using a memory profiler.
 

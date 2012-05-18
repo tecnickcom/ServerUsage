@@ -3,7 +3,7 @@ ServerUsage - README
 
 + Name: ServerUsage
 
-+ Version: 4.1.0
++ Version: 4.2.0
 
 + Release date: 2012-05-18
 
@@ -195,7 +195,7 @@ INSTALL SERVERUSAGE SERVER:
 
 As root install the ServerUsage-Server RPM file:
 
-	# rpm -i serverusage_server-4.1.0-1.el6.$(uname -m).rpm 
+	# rpm -i serverusage_server-4.2.0-1.el6.$(uname -m).rpm 
 	
 Configure the ServerUsage-Server
 
@@ -215,7 +215,7 @@ INSTALL SERVERUSAGE CLIENT:
 As root install the SystemTap runtime and ServerUsage-Client RPM files:
 
 	# rpm -i systemtap-runtime-1.7-1.el6.$(uname -m).rpm 
-	# rpm -i serverusage_client-4.1.0-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_client-4.2.0-1.el6.$(uname -m).rpm
 
 Configure the ServerUsage-Client
 
