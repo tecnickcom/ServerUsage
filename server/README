@@ -1,0 +1,165 @@
+ServerUsage-Server - README
+================================================================================
+
+Name: ServerUsage-Server
+
+Version: 4.1.0
+
+Release date: 2012-05-17
+
+Author: Nicola Asuni (nicola@fubra.com)
+
+Copyright (2012-2012):
+	Fubra Limited
+	Manor Coach House
+	Church Hill
+	Aldershot
+	Hampshire
+	GU12 4RQ
+	UK
+	http://www.fubra.com
+	support@fubra.com
+
+URL: https://github.com/fubralimited/ServerUsage
+
+
+SOFTWARE LICENSE (AGPLv3):
+--------------------------
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License along
+with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+See LICENSE.TXT file for more information.
+
+
+DESCRIPTION:
+------------
+
+The ServerUsage-Server is a program to collect and process log data sent by
+ServerUsage-Client instances on remote computers.
+
+The ServerUsage-Server program listen on a TCP port for incoming log data and
+store them on a SQLite database table. An SQL file (serverusage_dbagg.sql) is
+executed periodically to aggregate data on another table and destroy obsolete
+data.
+
+This folder contains the source code of ServerUsage-Server:
+
+* LICENSE
+
+	License file.
+
+* serverusage_api.php
+
+	Web service to extract and return information from ServerUsage log_agg_hst database table.
+	This file is installed by deafult in /var/www/serverusage directory.
+
+* makefile
+
+	This is the makefile to create and install executable binaries.
+
+* README
+
+	This is the file you are currently reading.
+
+* serverusage_database.sql
+
+	This SQL file contains the instructions to create the SQLite database tables
+	used to store the received log data.
+
+	By default the tcpreceiver.bin program stores all raw logs on log_raw table.
+
+* serverusage_dbagg.sh
+
+	This is a shell script executed by a cron job every 5 minutes to aggregate
+	data from log_raw table to log_agg_hst table.
+
+* serverusage_server
+
+	SysV Init script to execute ServerUsage-Server.
+
+* serverusage_server.8
+
+	Manpage for ServerUsage-Server.
+
+* serverusage_server.conf
+
+	Configuration file.
+
+* serverusage_server.spec
+
+	SPEC file for RPM packaging.
+
+* serverusage_svg.html
+
+	HTML page example usage for serverusage_api.php script.
+	This file is installed by deafult in /var/www/serverusage directory.
+
+* serverusage_tcpreceiver.c
+
+	This program is compiled as serverusage_tcpsender.bin.
+	This program listen on specified IP:PORT for incoming TCP connections
+	(from ServerUsage-Client) and store the data on a SQLite database table.
+
+
+REQUIRED PACKAGES TO COMPILE THE SOURCES:
+-----------------------------------------
+
+	The following packages are required to compile the sources:
+
+		* sqlite-devel sqlite
+		* install general development packages for C
+
+	Check on internet for the correct modules for your OS and kernel version.
+
+	### Instructions for CentOS and Scientific Linux:
+
+	yum groupinstall 'Development Tools'
+	yum install elfutils-devel sqlite-devel.x86_64 sqlite.x86_64
+
+	On the production machines you have to install SQLite3.
+
+
+COMPILE AND INSTALL
+-------------------
+
+	Once the required packages are installed, copy/extract the files in this
+	folder to a folder in your home directory and cd into it.
+
+	Now execute the following commands to compile and install:
+
+		make
+		make install
+
+
+CONFIGURE
+---------
+
+	To configure ServerUsage-Server edit the /etc/serverusage_server.conf
+	configuration file.
+
+	The serverusage_api.php script is installed by default to
+	/var/www/serverusage directory. Move it on another web directory and/or
+	configure Apache accordingly.
+
+
+RUN
+---
+
+	To start this program you can use the SysV init script:
+
+	/etc/init.d/serverusage_server
+
+	To startup the service at boot you can use the chkconfig or update-rc.d
+	command (depending by OS type).
+
+================================================================================

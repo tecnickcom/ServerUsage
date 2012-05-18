@@ -1,0 +1,273 @@
+#! /usr/bin/env stap
+
+//=============================================================================+
+// File name   : serverusage_client.stp
+// Begin       : 2012-02-02
+// Last Update : 2012-05-16
+// Version     : 4.1.0
+//
+// Website     : https://github.com/fubralimited/ServerUsage
+//
+// Description : SystemTap script to measure user usage of server resources.
+//
+// Author: Nicola Asuni
+//
+// (c) Copyright:
+//               Fubra Limited
+//               Manor Coach House
+//               Church Hill
+//               Aldershot
+//               Hampshire
+//               GU12 4RQ
+//				 UK
+//               http://www.fubra.com
+//               support@fubra.com
+//
+// License:
+//    Copyright (C) 2012-2012 Fubra Limited
+//
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU Affero General Public License as
+//    published by the Free Software Foundation, either version 3 of the
+//    License, or (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU Affero General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+//    See LICENSE.TXT file for more information.
+//=============================================================================+
+
+
+// COMPILING: stap -m serverusage_client -v -p4 serverusage_client.stp -D MAXACTION=1000000 MAXMAPENTRIES=1000000 MAXSTRINGLEN=512
+
+// USAGE: staprun -b 1024 serverusage_client.ko smp=2 srvid="localhost"
+
+// 	smp: is the sampling interval in seconds.
+// 	srvid: is the server id (hostname, custom string or a numeric ID).
+
+/*
+
+OUTPUT FORMAT (CSV - TAB SEPARATED VALUES):
+
+	* line type - string used to identify blocks of data: "@S" = first line of the block, "@E" = last line of the block, "@@" = line inside the block.
+	* start sampling time - [integer] time when measure started (seconds since EPOCH);
+	* end sampling time - [integer] time when measure ended (seconds since EPOCH);
+	* name of the process [string];
+	* server ID [string] string used to identify the current server (by default hostname);
+	* user ID [integer] process UID;
+	* local IP address [string] set only when reading TCP and UDP traffic;
+	* ticks [integer] number of CPU clock ticks;
+	* io read [integer] bytes read from IO storage;
+	* io write [integer] bytes written to IO storage;
+	* network in [integer] number of bytes received via TCP or UDP packets;
+	* network out [integer] number of bytes sent via TCP or UDP packets;
+
+*/
+
+/**
+ * @file
+ * systemtap script to measure user usage of server resources.
+ * @package net.rackmap.admin
+ * @author Nicola Asuni
+ * @since 2012-02-02
+ */
+
+// --- PARAMETERS --------------------------------------------------------------
+
+/**
+ * Sampling time in seconds.
+ */
+global smp=60
+
+/**
+ * Server identificator (hostname, IP or numerical ID).
+ */
+global srvid="emptyhost"
+
+
+// --- GLOBAL VARIABLES --------------------------------------------------------
+
+/**
+ * Count CPU ticks (user + kernel ticks).
+ */
+global ticks
+
+/**
+ * Count I/O storage reads.
+ */
+global ioread
+
+/**
+ * Count I/O storage writes.
+ */
+global iowrite
+
+/**
+ * Count TCP + UDP received messages.
+ */
+global netin
+
+/**
+ * Count TCP + UDP sent messages.
+ */
+global netout
+
+/**
+ * Array used to keep track of array keys.
+ */
+global rowkey
+
+/**
+ * Starting time for capturing data.
+ */
+global starttime
+
+
+// --- INITIALIZATION ----------------------------------------------------------
+
+/**
+ * Initialize the script.
+ */
+probe begin {
+	// set the starting time
+	starttime = gettimeofday_s()
+}
+
+// --- PROBES ------------------------------------------------------------------
+
+/**
+ * Probe for CPU clock ticks.
+ */
+probe perf.sw.cpu_clock {
+	// get current process name
+	e = execname()
+	// get user ID (UID)
+	u = uid()
+	// server ip
+	iplocal = "0";
+	// store ticks for each process and UID
+	ticks[e,u,iplocal] += 1
+	// record this key
+	rowkey[e,u,iplocal] = 1
+}
+
+/**
+ * Probe for I/O write/read on storage devices.
+ */
+probe ioblock.request {
+	// get current process name
+	e = execname()
+	// get user ID (UID)
+	u = uid()
+	// server ip
+	iplocal = "0";
+	if (bio_rw_num(rw) == BIO_WRITE) // add number of written bytes
+		iowrite[e,u,iplocal] += size
+	else // add number of read bytes
+		ioread[e,u,iplocal] += size
+	// record this key
+	rowkey[e,u,iplocal] = 1
+}
+
+/**
+ * Probe for sent TCP or UDP message.
+ */
+probe tcp.sendmsg,udp.sendmsg {
+	// get current process name
+	e = execname()
+	// get user ID (UID)
+	u = uid()
+	// pointer to a struct inet_sock
+	sk = @defined($sk) ? $sk : $sock->sk;
+	// get local IP address as integer
+	iptemp = htonl(tcpmib_local_addr(sk))
+	// convert IP address to string
+	iplocal = ip_ntop(iptemp)
+	// add bytes received
+	netout[e,u,iplocal] += size
+	// record this key
+	rowkey[e,u,iplocal] = 1
+}
+
+/**
+ * Probe for received TCP or UDP message.
+ */
+probe tcp.recvmsg,udp.recvmsg {
+	// get current process name
+	e = execname()
+	// get user ID (UID)
+	u = uid()
+	// pointer to a struct inet_sock
+	sk = @defined($sk) ? $sk : $sock->sk;
+	// get local IP address as integer
+	iptemp = htonl(tcpmib_local_addr(sk))
+	// convert IP address to string
+	iplocal = ip_ntop(iptemp)
+	// add bytes received
+	netin[e,u,iplocal] += size
+	// record this key
+	rowkey[e,u,iplocal] = 1
+}
+
+// --- DATA OUTPUT -------------------------------------------------------------
+
+/**
+ * Display usage statistics within a (smp)-seconds sample:
+ * start sampling time, end sampling time, process name, server ID, user ID, ticks, io read, io write, network in, network out
+ */
+probe timer.ms(250) {
+	// get current time in seconds since EPOCH
+	time = gettimeofday_s()
+	// time elapsed since last output
+	timediff = (time - starttime)
+	// print data only at specific timestamps (to keep sampling window synchronized with scripts running on different servers)
+	if ((timediff > 0) && ((time % smp) == 0)) {
+		// check for the correct sampling interval
+		if (timediff == smp) {
+			// mark the start of this block of data with an empty line
+			printf("@S\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\n")
+			// print log rows
+			foreach ([pro,uid,iplocal] in rowkey) {
+				// print a log row
+				printf("@@\t%d\t%d\t%s\t%s\t%d\t%s\t%d\t%d\t%d\t%d\t%d\n", starttime, time, pro, srvid, uid, iplocal, ticks[pro,uid,iplocal], ioread[pro,uid,iplocal], iowrite[pro,uid,iplocal], netin[pro,uid,iplocal], netout[pro,uid,iplocal])
+			}
+			// mark the end of this block of data with an empty line
+			printf("@E\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\n")
+		}
+		// reset counters (variables are not actually deleted completely)
+		delete ticks
+		delete ioread
+		delete iowrite
+		delete netin
+		delete netout
+		delete rowkey
+		// update starting sampling time
+		starttime = time
+	}
+}
+
+// --- ENDING ------------------------------------------------------------------
+
+/**
+ * End script and delete variables.
+ */
+probe end {
+	delete ticks
+	delete ioread
+	delete iowrite
+	delete netin
+	delete netout
+	delete rowkey
+	delete starttime
+	delete smp
+	delete srvid
+}
+
+//=============================================================================+
+// END OF FILE
+//=============================================================================+

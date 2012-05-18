@@ -1,0 +1,171 @@
+4.1.0 (2012-05-17)
+	- C scripts were analysed and optimised using a memory profiler.
+
+4.0.0 (2012-05-17)
+	- This version uses SQLite as back-end database for the server module.
+	- Database is now created by makefile script (and preserved if already exist).
+	- Init script is now able to install/uninstall the cron job for the database aggregator.
+	- The output of the SystemTap module was changed to be TAB-separated instead of comma-separated.
+
+--------------------------------------------------------------------------------
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+----------------------------------------------------------------------------
+
+3.0.4 (2012-05-11)
+	- serverusage_tcpsender is now able to store log data on a local filesystem in case of network errors.
+	- PATH_TEMPLOG was added into serverusage_client.conf to define the path of local caching.
+
+3.0.3 (2012-05-08)
+	- A memory leak was fixed.
+
+3.0.2 (2012-05-08)
+	- Fixed minor syntax errors.
+
+3.0.1 (2012-05-08)
+	- Minor documentation improvements.
+
+3.0.0 (2012-05-04)
+	- This version introduce multithreading support for the TCP receiver.
+	- Documentation was fixed.
+
+--------------------------------------------------------------------------------
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+--------------------------------------------------------------------------------
+
+2.0.9 (2012-05-02)
+	- The TCP sender and receiver were modified to not exit on errors.
+
+2.0.8 (2012-05-01)
+	- Installation instructions were added on README.markdown
+	- SysV Init scripts were improved to be compatible with chkconfig.
+	- HTML file example was fixed.
+
+2.0.7 (2012-04-30)
+	- A bug on client starting script was fixed.
+
+2.0.6 (2012-04-27)
+	- Instructions to create RPMs were added on README.markdown file
+	- VERSION file was added.
+
+2.0.5 (2012-04-26)
+	- Util files were moved inside the server package.
+	- PHP util script was improved to read main configuration file.
+
+2.0.4 (2012-04-25)
+	- Makefiles now includes the DESTDIR variable support.
+	- SPEC files were added to create RPM packages.
+
+// -----------------------------------------------------------------------------
+
+2.0.003 (2012-04-17)
+	- All files were renamed for compatibility issues.
+
+2.0.000 (2012-04-17)
+	- Project were splitted in client, server and util sub-projects.
+	- All files were renamed.
+	- SysV init files were added to start/stop the services.
+	- makefile was added to client and server to compile and install the applications.
+	- Manpage and README files were added.
+
+--------------------------------------------------------------------------------
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+--------------------------------------------------------------------------------
+
+1.3.015 (2012-04-11)
+	- IO probe on serverusage.stp was fixed.
+
+1.3.014 (2012-04-11)
+	- SVG output on srvusgapi.php was improved.
+	- Mode 'csv' was added to srvusgapi.php to return data as CSV tab-separated values.
+	- Mode 'psa' was added to srvusgapi.php to return data as Base64 encoded PHP Serialized Array.
+
+1.3.013 (2012-04-05)
+	- The API srvusgapi.php now includes several new parameters and features (check the documentation).
+	- Default displaysvg.html now automatically set the graphic size to fit all available space and by default uses the logarithmic scale.
+
+1.3.012 (2012-04-04)
+	- SQL error on serverusageagg.sql was fixed.
+
+1.3.011 (2012-04-04)
+	- serverusageagg.sql script was changed to exclude swapper process (UID = 0).
+
+1.3.010 (2012-03-29)
+	- SQL queries were improved.
+	- srvusgapi.php was improved.
+
+1.3.009 (2012-03-27)
+	- An example HTML page (displaysvg.html) to display and update the SVG graph was added.
+	- SVG content type was fixed.
+
+1.3.008 (2012-03-27)
+	- SVG mode on srvusgapi.php were fixed and improved.
+
+1.3.007 (2012-03-26)
+	- The queries on srvusgapi.php file were fixed.
+	- The parameter 'mode' was added to srvusgapi.php with the ability to output data in SVG mode.
+
+1.3.006 (2012-03-13)
+	- Documentation was fixed.
+	- Source code was cleaned-up.
+
+1.3.005 (2012-03-13)
+	- Database table views were removed.
+	- Web service srvusgapi.php was fixed and improved to include new metrics.
+
+1.3.004 (2012-03-12)
+	- Aggregation table name were changed.
+	- A table view was added to extract some information.
+	- Web service srvusgapi.php was added to get data from the view table.
+
+1.3.003 (2012-03-09)
+	- The README was updated.
+
+1.3.002 (2012-03-08)
+	- SQL file for log database was added (serverusagedb.sql).
+	- SQL file for aggregating log data using a cron job was added (serverusageagg.sql).
+	- The README was updated.
+
+1.3.001 (2012-03-06)
+	- A potential bug was fixed on tcpreceiver.c
+
+1.3.000 (2012-03-05)
+	- TCP client server programs were added to transmit log data remotely via TCP connection and store it on a database table.
+
+1.2.002 (2012-03-01)
+	- Documentation and compile options were updated.
+	- Empty lines for marking the start and end of a block were added.
+
+1.2.001 (2012-02-28)
+	- Documentation and compile instructions were updated.
+
+1.2.000 (2012-02-28)
+	- The ability to directly send output to logger and netcat was removed because of the limitations of system() function: <"WARNING: too many pending (system) messages">.
+	- Now the otput is always sent to stdout.
+
+1.1.001 (2012-02-27)
+	- Netcat options were improved.
+
+1.1.000 (2012-02-23)
+	- Output rows now contains a new column containing the IP address.
+	- Network probes were changed to track single TCP and UDP packets.
+
+1.0.005 (2012-02-20)
+	- Output rows now contains a new column with "@" symbol used to identify UDP packets.
+
+1.0.004 (2012-02-14)
+	- Output format was changed to be directly compatible with SQL syntax.
+
+1.0.003 (2012-02-13)
+	- Empty aggregates problem was fixed.
+	- Compilation instructions were updated.
+
+1.0.002 (2012-02-13)
+	- The script has been converted so it can be used as a compiled module (chek the comments inside the code for further info).
+	- The bash script has been removed.
+	- Now you can log in 3 differnt modes: stdout, local rsyslog logger, remote rsyslog logger via UDP.
+
+1.0.001 (2012-02-09)
+	- This version allows to log data on remote rsyslog server. Check the bash script for more info.
+
+1.0.000 (2012-02-08)
+	- First version on GIT.

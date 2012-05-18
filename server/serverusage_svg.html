@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr">
+<head>
+<title>ServerUsage SVG stats</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="language" content="en" />
+<meta name="description" content="Dispay ServerUsage SVG stats" />
+<meta name="author" content="Nicola Asuni" />
+</head>
+<body style="background-color:black;padding:0;margin:0;">
+<img src="" id="SVGIMG" alt="ServerUsage Stats" width="1" height="1" style="position:absolute;top:0;left:0;padding:0;margin:0;" />
+<script type="text/javascript">
+//<![CDATA[
+function reloadImage() {
+	// get current time in seconds and subtract 10 minutes
+	totime = Math.round((new Date().getTime() / 1000) - 600);
+	// 1 pixel = 1 minute
+	fromtime = (totime - (window.innerWidth * 60));
+	document.getElementById("SVGIMG").width = window.innerWidth;
+	document.getElementById("SVGIMG").height = window.innerHeight;
+	document.getElementById("SVGIMG").src = 'serverusage_api.php?from='+fromtime+'&to='+totime+'&mode=svg&width='+window.innerWidth+'&height='+window.innerHeight+'&scale=log&bgcol=dark&gtype=12345';
+	// refresh the image every 5 minutes
+	setTimeout("reloadImage()", 300000);
+}
+window.onload = reloadImage();
+//]]>
+</script>
+</body>
+</html>

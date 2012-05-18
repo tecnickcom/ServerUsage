@@ -1,0 +1,132 @@
+#!/bin/bash
+#
+#chkconfig: 235 99 01
+#description: Starts and stops ServerUsage-Server
+
+#==============================================================================+
+# File name   : serverusage_server
+# Begin       : 2012-04-12
+# Last Update : 2012-05-16
+# Version     : 4.1.0
+#
+# Description : Init script to execute ServerUsage-Server.
+#
+# Website     : https://github.com/fubralimited/ServerUsage
+#
+# Author: Nicola Asuni
+#
+# (c) Copyright:
+#               Fubra Limited
+#               Manor Coach House
+#               Church Hill
+#               Aldershot
+#               Hampshire
+#               GU12 4RQ
+#				UK
+#               http://www.fubra.com
+#               support@fubra.com
+#
+# License:
+#    Copyright (C) 2012-2012 Fubra Limited
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as
+#    published by the Free Software Foundation, either version 3 of the
+#    License, or (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#    See LICENSE.TXT file for more information.
+#==============================================================================+
+
+# configuration file
+CONFIG_FILE="/etc/serverusage_server.conf"
+
+# load parameters from configuration file
+if [ -f $CONFIG_FILE ] ; then
+	. $CONFIG_FILE
+fi
+
+# start program in background
+CMD="$PATH_TCPRECEIVER $LOGSERVER_PORT $MAX_CONNECTIONS $SQLITE_DATABASE"
+
+# get SystemV Init function library.
+if [ -f /etc/init.d/functions ] ; then
+	. /etc/init.d/functions
+elif [ -f /etc/rc.d/init.d/functions ] ; then
+	. /etc/rc.d/init.d/functions
+else
+	exit 1
+fi
+
+# Start the service
+start() {
+	if test -f /var/lock/subsys/serverusage_server ; then
+		echo -n $"Service is Already Running."
+		echo
+		return
+	fi
+	echo -n $"Starting ServerUsage-Server: "
+	#start the process
+	($CMD)&
+	# create the lock file
+	touch /var/lock/subsys/serverusage_server
+	# create the cron job to aggregate database data
+	crontab -l > /tmp/crontabo.txt
+	sed '/2,7,12,17,22,27,32,37,42,47,52,57 \* \* \* \* sleep 30; \/usr\/bin\/serverusage_dbagg.sh/d' /tmp/crontabo.txt > /tmp/crontabn.txt
+	echo "2,7,12,17,22,27,32,37,42,47,52,57 * * * * sleep 30; /usr/bin/serverusage_dbagg.sh" >> /tmp/crontabn.txt
+	crontab < /tmp/crontabn.txt
+	rm -f /tmp/crontabo.txt
+	rm -f /tmp/crontabn.txt
+	success $"ServerUsage-Server startup"
+	echo
+}
+
+# Restart the service
+stop() {
+	echo -n $"Stopping ServerUsage-Server: "
+	# kill the process
+	killproc $CMD
+	# delete the lock file
+	rm -f /var/lock/subsys/serverusage_server
+	# remove the cron job
+	crontab -l > /tmp/crontabo.txt
+	sed '/2,7,12,17,22,27,32,37,42,47,52,57 \* \* \* \* sleep 30; \/usr\/bin\/serverusage_dbagg.sh/d' /tmp/crontabo.txt > /tmp/crontabn.txt
+	crontab < /tmp/crontabn.txt
+	rm -f /tmp/crontabo.txt
+	rm -f /tmp/crontabn.txt
+	#success $"ServerUsage-Server stop"
+	echo
+}
+
+### main logic ###
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status $CMD
+		;;
+	restart|reload|condrestart)
+		stop
+		start
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|restart|reload|status}"
+		exit 1
+esac
+
+exit 0
+
+#==============================================================================+
+# END OF FILE
+#==============================================================================+

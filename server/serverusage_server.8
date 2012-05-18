@@ -1,0 +1,44 @@
+.\" Manpage for ServerUsage-Server.
+.TH serverusage_server 8 "2012-05-15"
+.SH NAME
+serverusage_server \- ServerUsage-Server control interface
+.SH SYNOPSIS
+serverusage_server is a SysV init script that takes one-word commands, defined below:
+.PP
+.B serverusage_server
+.I command
+.PP
+.SH DESCRIPTION
+.B serverusage_server
+is a front end to the ServerUsage-Server program.
+The ServerUsage-Server program listen on a specified TCP port for incoming data sent by remote ServerUsage-Client programs.
+The received data is stored on a SQLite table.
+.PP
+A cron job is automatically created to aggregate the raw data on another SQLite table.
+.PP
+.B NOTE:
+The configuration file is located at
+.B /etc/serverusage_server.conf
+.PP
+.SH OPTIONS
+The \fIcommand\fP can be any one of the following options:
+.TP 14
+.BI start
+Start ServerUsage-Server (serverusage_tcpreceiver.bin) and create the cron job to aggregate data.
+.TP
+.BI stop
+Stops ServerUsage-Server.
+.TP
+.BI restart
+Restarts ServerUsage-Server.
+If the program is not running, it is started.
+.BI status
+Displays a brief status report.
+.BI help
+Displays a short help message.
+.SH AUTHOR
+Nicola Asuni (nicola@fubra.com)
+.SH COPYRIGHT
+(c) 2012-2012 Fubra Limited
+Manor Coach House, Church Hill, Aldershot, Hampshire, GU12 4RQ, UK (http://www.fubra.com - support@fubra.com)
+.

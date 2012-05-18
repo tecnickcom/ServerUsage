@@ -1,0 +1,125 @@
+#!/bin/bash
+#
+#chkconfig: 235 99 01
+#description: Starts and stops ServerUsage-Client
+
+#==============================================================================+
+# File name   : serverusage_client
+# Begin       : 2012-04-12
+# Last Update : 2012-05-11
+# Version     : 4.1.0
+#
+# Description : Init script to execute ServerUsage-Client.
+#
+# Website     : https://github.com/fubralimited/ServerUsage
+#
+# Author: Nicola Asuni
+#
+# (c) Copyright:
+#               Fubra Limited
+#               Manor Coach House
+#               Church Hill
+#               Aldershot
+#               Hampshire
+#               GU12 4RQ
+#               UK
+#               http://www.fubra.com
+#               support@fubra.com
+#
+# License:
+#    Copyright (C) 2012-2012 Fubra Limited
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as
+#    published by the Free Software Foundation, either version 3 of the
+#    License, or (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#    See LICENSE.TXT file for more information.
+#==============================================================================+
+
+# configuration file
+CONFIG_FILE="/etc/serverusage_client.conf"
+
+# load parameters from configuration file
+if [ -f $CONFIG_FILE ] ; then
+	. $CONFIG_FILE
+fi
+
+# check empty server ID
+if [ -z "$SERVER_ID" ] ; then
+	# set hostname
+	SERVER_ID=`hostname`
+fi
+
+# commands to execute (systemtap monitoring + tcp sender)
+CMDSTAP="$PATH_STAPRUN -b $BUFFER_SIZE $PATH_STAPMODULE smp=$SAMPLING_TIME srvid=$SERVER_ID"
+CMDTCPS="$PATH_TCPSENDER $LOGSERVER_IP $LOGSERVER_PORT $PATH_TEMPLOG"
+
+# get SystemV Init function library.
+if [ -f /etc/init.d/functions ] ; then
+	. /etc/init.d/functions
+elif [ -f /etc/rc.d/init.d/functions ] ; then
+	. /etc/rc.d/init.d/functions
+else
+	exit 1
+fi
+
+# Start the service
+start() {
+	if test -f /var/lock/subsys/serverusage_client ; then
+		echo -n $"Service is Already Running."
+		echo
+		return
+	fi
+	echo -n $"Starting ServerUsage-Client: "
+	($CMDSTAP | $CMDTCPS)&
+	# create the lock file
+	touch /var/lock/subsys/serverusage_client
+	success $"ServerUsage-Client startup"
+	echo
+}
+
+# Restart the service
+stop() {
+	echo -n $"Stopping ServerUsage-Client: "
+	killproc $PATH_TCPSENDER
+	killproc $PATH_STAPIO
+	# delete the lock file
+	rm -f /var/lock/subsys/serverusage_client
+	echo
+}
+
+### main logic ###
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status $PATH_STAPIO
+		status $PATH_TCPSENDER
+		;;
+	restart|reload|condrestart)
+		stop
+		start
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|restart|reload|status}"
+		exit 1
+esac
+
+exit 0
+
+#==============================================================================+
+# END OF FILE
+#==============================================================================+
