@@ -1,7 +1,10 @@
-4.2.0 (2012-05-17)
+4.3.0 (2012-05-18)
+	- serverusage_tcpreceiver.c was fixed.
+
+4.2.0 (2012-05-18)
 	- Bug related to nested transactions were fixed.
 
-4.1.0 (2012-05-17)
+4.1.0 (2012-05-18)
 	- C scripts were analysed and optimised using a memory profiler.
 
 4.0.0 (2012-05-17)

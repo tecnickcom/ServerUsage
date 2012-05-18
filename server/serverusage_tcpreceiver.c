@@ -1,9 +1,9 @@
 /*
 //=============================================================================+
-// File name   : serverusage_tcpreceiver_test.c
+// File name   : serverusage_tcpreceiver.c
 // Begin       : 2012-02-14
 // Last Update : 2012-05-17
-// Version     : 4.2.0
+// Version     : 4.3.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -45,12 +45,11 @@
 */
 
 // TO COMPILE (requires sqlite-devel):
-// gcc -O3 -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -fno-strict-aliasing -fwrapv -fPIC --param=ssp-buffer-size=4 -D_GNU_SOURCE -o serverusage_tcpreceiver_test.bin serverusage_tcpreceiver_test.c -lpthread -lsqlite3
+// gcc -O3 -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -fno-strict-aliasing -fwrapv -fPIC --param=ssp-buffer-size=4 -D_GNU_SOURCE -o serverusage_tcpreceiver.bin serverusage_tcpreceiver.c -lpthread -lsqlite3
 
 // USAGE EXAMPLES:
-// sqlite3 serverusage.db < serverusage_database.sql
-// ./serverusage_tcpreceiver_test.bin PORT MAX_CONNECTIONS "database"
-// ./serverusage_tcpreceiver_test.bin 9930 100 "/home/makerpm/ServerUsageTEST/serverusage.db"
+// ./serverusage_tcpreceiver.bin PORT MAX_CONNECTIONS "database"
+// ./serverusage_tcpreceiver.bin 9930 100 "/var/lib/serverusage.db"
 
 // NOTE: For the SQLite table used to to store data, please consult the SQL file on this project.
 
