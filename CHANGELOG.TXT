@@ -1,3 +1,6 @@
+4.4.0 (2012-05-21)
+	- SQLite transactions where fixed to properly lock/unlock the table.
+
 4.3.0 (2012-05-18)
 	- serverusage_tcpreceiver.c was fixed.
 

@@ -3,7 +3,7 @@
 // File name   : serverusage_tcpreceiver.c
 // Begin       : 2012-02-14
 // Last Update : 2012-05-17
-// Version     : 4.3.0
+// Version     : 4.4.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -90,6 +90,11 @@ sqlite3 *db;
  * SQLite statement
  */
 sqlite3_stmt *stmt;
+
+/**
+ * Global variable to check if we are inside an SQLite transaction.
+ */
+int trns = 0;
 
 /**
  * Struct to contain thread arguments.
@@ -197,6 +202,16 @@ void *connection_thread(void *cargs) {
 	memset(buf, 0, BUFLEN);
 	memset(lastrow, 0, BUFLEN);
 
+	if (trns == 0) {
+		// begin the first transaction (we use transactions to improve performances)
+		if (sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &ErrMsg) == SQLITE_OK) {
+			trns = 1;
+		} else {
+			perror(ErrMsg);
+			sqlite3_free(ErrMsg);
+		}
+	}
+
 	// receive a message from ns and put data int buf (limited to BUFLEN characters)
 	while (read(arg.socket_conn, buf, READBUFLEN) > 0) {
 
@@ -251,6 +266,16 @@ void *connection_thread(void *cargs) {
 		memset(buf, 0, BUFLEN);
 
 	} // end read TCP
+	
+	if (trns == 1) {
+		// end the transaction (if any)
+		if (sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &ErrMsg) == SQLITE_OK) {
+			trns = 0;
+		} else {
+			perror(ErrMsg);
+			sqlite3_free(ErrMsg);
+		}
+	}
 
 	// close connection
 	close(arg.socket_conn);
@@ -357,12 +382,6 @@ int main(int argc, char *argv[]) {
 	// listen for connections
 	listen(s, maxconn);
 
-	// begin the first transaction (we use transaction to improve performances)
-	if (sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
-		perror(ErrMsg);
-		sqlite3_free(ErrMsg);
-	}
-
 	// forever
 	while (1)  {
 
@@ -373,17 +392,6 @@ int main(int argc, char *argv[]) {
 			// retry after 1 second
 			sleep(1);
 		} else {
-
-			// commit the current transaction
-			if (sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
-				perror(ErrMsg);
-				sqlite3_free(ErrMsg);
-			}
-			// begin the next transaction
-			if (sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
-				perror(ErrMsg);
-				sqlite3_free(ErrMsg);
-			}
 
 			// prepare data for the thread
 			cargs[tn].socket_conn = ns;
@@ -405,12 +413,6 @@ int main(int argc, char *argv[]) {
 		}
 
 	} // end of for loop
-
-	// commit last transaction
-	if (sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
-		perror(ErrMsg);
-		sqlite3_free(ErrMsg);
-	}
 
 	// close socket
 	close(s);
