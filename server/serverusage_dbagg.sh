@@ -3,7 +3,7 @@
 # File name   : serverusage_dbagg.sql
 # Begin       : 2012-02-14
 # Last Update : 2012-05-17
-# Version     : 4.4.0
+# Version     : 4.5.0
 #
 # Website     : https://github.com/fubralimited/ServerUsage
 #

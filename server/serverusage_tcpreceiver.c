@@ -2,8 +2,8 @@
 //=============================================================================+
 // File name   : serverusage_tcpreceiver.c
 // Begin       : 2012-02-14
-// Last Update : 2012-05-17
-// Version     : 4.4.0
+// Last Update : 2012-05-22
+// Version     : 4.5.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -45,7 +45,7 @@
 */
 
 // TO COMPILE (requires sqlite-devel):
-// gcc -O3 -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -fno-strict-aliasing -fwrapv -fPIC --param=ssp-buffer-size=4 -D_GNU_SOURCE -o serverusage_tcpreceiver.bin serverusage_tcpreceiver.c -lpthread -lsqlite3
+// gcc -O3 -g -pipe -Wp,-D_THREAD_SAFE -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -fno-strict-aliasing -fwrapv -fPIC --param=ssp-buffer-size=4 -D_GNU_SOURCE -o serverusage_tcpreceiver.bin serverusage_tcpreceiver.c -lpthread -lsqlite3
 
 // USAGE EXAMPLES:
 // ./serverusage_tcpreceiver.bin PORT MAX_CONNECTIONS "database"
@@ -53,7 +53,8 @@
 
 // NOTE: For the SQLite table used to to store data, please consult the SQL file on this project.
 
-
+#include <pthread.h>
+#include <semaphore.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -63,8 +64,14 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <sqlite3.h>
-#include <pthread.h>
-#include <semaphore.h>
+
+// DEBUG OPTION TO PRINT EXECUTION TIME
+//#define _DEBUG
+#ifdef _DEBUG
+	#include <time.h>
+	time_t starttime;
+	time_t endtime;
+#endif
 
 /**
  * Max size of the TCP buffer lenght.
@@ -92,9 +99,14 @@ sqlite3 *db;
 sqlite3_stmt *stmt;
 
 /**
- * Global variable to check if we are inside an SQLite transaction.
+ * Semaphore used to synchronise SQLite transactions.
  */
-int trns = 0;
+sem_t mutex;
+
+/**
+ * Global variable to count active threads.
+ */
+int threadcounter = 0;
 
 /**
  * Struct to contain thread arguments.
@@ -202,15 +214,20 @@ void *connection_thread(void *cargs) {
 	memset(buf, 0, BUFLEN);
 	memset(lastrow, 0, BUFLEN);
 
-	if (trns == 0) {
-		// begin the first transaction (we use transactions to improve performances)
-		if (sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &ErrMsg) == SQLITE_OK) {
-			trns = 1;
-		} else {
+	sem_wait(&mutex);
+	++threadcounter;
+	if (threadcounter == 1) {
+		#ifdef _DEBUG
+			starttime = time(NULL);
+			printf("START TIME [sec]: %d\n", starttime);
+		#endif
+		// begin the transaction when the first thread is created (we use transactions to improve performances)
+		if (sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
 			perror(ErrMsg);
 			sqlite3_free(ErrMsg);
 		}
 	}
+	sem_post(&mutex);
 
 	// receive a message from ns and put data int buf (limited to BUFLEN characters)
 	while (read(arg.socket_conn, buf, READBUFLEN) > 0) {
@@ -266,16 +283,22 @@ void *connection_thread(void *cargs) {
 		memset(buf, 0, BUFLEN);
 
 	} // end read TCP
-	
-	if (trns == 1) {
-		// end the transaction (if any)
-		if (sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &ErrMsg) == SQLITE_OK) {
-			trns = 0;
-		} else {
+
+	sem_wait(&mutex);
+	--threadcounter;
+	if (threadcounter == 0) {
+		// end the transaction when the last thread is closed
+		if (sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
 			perror(ErrMsg);
 			sqlite3_free(ErrMsg);
 		}
+		#ifdef _DEBUG
+			endtime = time(NULL);
+			printf("  END TIME [sec]: %d\n", endtime);
+			printf("ELAPSED TIME [sec]: %d\n\n", (endtime - starttime));
+		#endif
 	}
+	sem_post(&mutex);
 
 	// close connection
 	close(arg.socket_conn);
@@ -381,6 +404,9 @@ int main(int argc, char *argv[]) {
 
 	// listen for connections
 	listen(s, maxconn);
+
+	// initialize mutex semaphore
+	sem_init(&mutex, 0, 1);
 
 	// forever
 	while (1)  {

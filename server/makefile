@@ -2,8 +2,8 @@
 #==============================================================================+
 # File name   : makefile
 # Begin       : 2012-04-16
-# Last Update : 2012-05-17
-# Version     : 4.4.0
+# Last Update : 2012-05-22
+# Version     : 4.5.0
 #
 # Website     : https:#github.com/fubralimited/ServerUsage
 #
@@ -43,7 +43,7 @@
 
 # --- MACROS ---
 CC=gcc
-CFLAGS=-O3 -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -fno-strict-aliasing -fwrapv -fPIC --param=ssp-buffer-size=4 -D_GNU_SOURCE
+CFLAGS=-O3 -g -pipe -Wp,-D_THREAD_SAFE -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -fno-strict-aliasing -fwrapv -fPIC --param=ssp-buffer-size=4 -D_GNU_SOURCE
 CLIBS=-lpthread -lsqlite3
 
 # --- PATHS ---

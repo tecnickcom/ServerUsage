@@ -1,3 +1,6 @@
+4.5.0 (2012-05-22)
+	- The program serverusage_tcpreceiver.c was improved to be thread safe.
+
 4.4.0 (2012-05-21)
 	- SQLite transactions where fixed to properly lock/unlock the table.
 
