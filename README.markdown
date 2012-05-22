@@ -63,13 +63,13 @@ from the database or display graphs.
 
 ## GENERAL USAGE SCHEMA ##
 	
-	(ServerUsage-Client) - - - - - - - - - - - -> (ServerUsage-Server)
-	
-	([serverusage.ko]==>[tcpsender.bin]) - - - -> ([tcpreceiver]==>[RAW DATABASE TABLE])
-	
-	[RAW DATABASE TABLE]==>[serverusageagg.sql]==>[AGGREGATE DATABASE TABLE]
-	
-	[AGGREGATE DATABASE TABLE]==>[srvusgapi.php]==>[Data with selected format or SVG graph]
+	(ServerUsage-Client) - - TCP CONNECTION - -> (ServerUsage-Server)
+
+	([serverusage_client.ko]==>[serverusage_tcpsender.bin]) - - TCP CONNECTION - -> ([serverusage_tcpreceiver]==>[SQLite log_raw table (raw data)])
+
+	[SQLite log_raw table]==>[serverusage_dbagg.sh]==>[SQLite log_agg_hst table (aggregated data)]
+
+	[SQLite log_agg_hst table]==>[serverusage_api.php]==>[Data with selected format or SVG graph]
 
 
 HOW-TO CREATE ServerUsage RPMs
