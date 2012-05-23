@@ -167,7 +167,7 @@ Download the ServerUsage sources:
 	$ cd ~
 	$ git clone git://github.com/fubralimited/ServerUsage.git
 
-Copy the SPEC files and source files to rpmbuild dir (replace the version number with the correct value):
+Copy the SPEC files and source files to rpmbuild dir:
 	
 	$ cd ~/ServerUsage
 	$ export SUVER=$(cat VERSION) 
@@ -190,29 +190,40 @@ Create the RPMs:
 The RPMs are now located at ~/rpmbuild/RPMS/$(uname -m)
 
 
-INSTALL SERVERUSAGE SERVER:
----------------------------
+Install ServerUsage-Server
+--------------------------
+
+The ServerUsage-Server RPM must be installed only on the Log Server (the computer receiving the logs from the clients).
 
 As root install the ServerUsage-Server RPM file:
 
-	# rpm -i serverusage_server-4.5.0-1.el6.$(uname -m).rpm 
+	# rpm -i serverusage_server-4.5.0-1.el6.$(uname -m).rpm
 	
-Configure the ServerUsage-Server
+Once the RPM is installed you can configure the ServerUsage-Server editing the following file:
 
 	# nano /etc/serverusage_server.conf
 
-Start the service
+The ServerUsage-Server includes a SysV init script to start/stop/restart the service:
 
-	# /etc/init.d/serverusage_server start
+	# /etc/init.d/serverusage_server start|stop|restart
 
-Start the service at boot:
+The init script starts the serverusage_tcpreceiver.bin program that listen for incoming TCP connections from the clients, and install a cron job to aggregate the data every 5 minutes.
+The raw data received from serverusage_tcpreceiver.bin is stored on a SQLite 3 database (var/lib/serverusage/serverusage.db) table named log_raw. The table containing the aggregated data is called log_agg_hst. The aggregated data is immediately removed from the log_raw table. The data on log_agg_hst older than DB_GARBAGE_TIME seconds is automatically removed.
+
+To start the service at boot you can use the following command:
 
 	# chkconfig serverusage_server on
 
-INSTALL SERVERUSAGE CLIENT:
----------------------------
+To extract formatted information from the SQLite database you can use the serverusage_api.php. This file is installed by default in <em>/var/www/serverusage</em> directory, so you have to configure Apache/PHP accordingly or move the script to another position.
+The serverusage_api.php allows you to extract filtered information in various formats: JSON (JavaScript Object Notation), CSV (tab-separated text values), Base64 encoded serialized array or SVG (Scalable Vector Graphics). On the same directory where the file serverusage_api.php is, you can find an example HTML file that displays an auto-update graph using the php API.
 
-As root install the SystemTap runtime and ServerUsage-Client RPM files:
+
+Install ServerUsage-Client
+--------------------------
+
+The ServerUsage-Client RPM must be installed on each client computer to monitor.
+
+As root install the SystemTap-Runtime and ServerUsage-Client RPM files:
 
 	# rpm -i systemtap-runtime-1.7-1.el6.$(uname -m).rpm 
 	# rpm -i serverusage_client-4.5.0-1.el6.$(uname -m).rpm
@@ -221,11 +232,15 @@ Configure the ServerUsage-Client
 
 	# nano /etc/serverusage_client.conf 
 
-Start the service
+Set the IP address of the Log server where ServerUsage-Server is installed and be sure that the specified TCP port is open on both client and server.
 
-	# /etc/init.d/serverusage_client start
+The ServerUsage-Client includes a SysV init script to start/stop/restart the service:
 
-Start the service at boot:
+	# /etc/init.d/serverusage_client start|stop|restart
+
+When the service is started, the serverusage_client.ko SystemTap kernel module is executed via the staprun command and the output is piped to the serverusage_tcpsender.bin to be sent to the Loge server via a TCP connection. If the connection is broken or the Log server is not responding, the log files are temporarily stored on <em>/var/log/serverusage_cache.log</em> file and resent as soon the TCP connection is restored.
+
+To start the service at boot you can use the following command:
 
 	# chkconfig serverusage_client on
 
