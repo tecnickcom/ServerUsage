@@ -54,7 +54,7 @@ serverusage_tcpsender.bin to send the output to a log server via TCP.
 
 The ServerUsage-Server program listen on a TCP port for incoming log data 
 (from ServerUsage-Client) and store them on a SQLite table. An SQL file 
-(serverusage_dbagg.sql) is executed periodically to aggregate data on another 
+(serverusage_dbagg.sh) is executed periodically to aggregate data on another 
 table and delete obsolete data.
 
 The serverusage_api.php script can be remotely used to extract formatted data 
