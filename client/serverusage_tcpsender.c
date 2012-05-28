@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
 
 	// decode arguments
 	if (argc != 4) {
-		perror("This program accept a text as input from serverusage_client.ko module and send and sends data via TCP to the specified IP:PORT.\nYou must provide 3 arguments: ip_address, port, local_cache_file\nFOR EXAMPLE:\n./serverusage_tcpsender.bin \"127.0.0.1\" 9930 \"/var/log/serverusage_cache.log\"");
+		perror("This program accept a text as input from serverusage_client.ko module and sends data via TCP to the specified IP:PORT.\nYou must provide 3 arguments: ip_address, port, local_cache_file\nFOR EXAMPLE:\n./serverusage_tcpsender.bin \"127.0.0.1\" 9930 \"/var/log/serverusage_cache.log\"");
 		exit(1);
 	}
 

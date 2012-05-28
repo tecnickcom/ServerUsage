@@ -238,7 +238,7 @@ The ServerUsage-Client includes a SysV init script to start/stop/restart the ser
 
 	# /etc/init.d/serverusage_client start|stop|restart
 
-When the service is started, the serverusage_client.ko SystemTap kernel module is executed via the staprun command and the output is piped to the serverusage_tcpsender.bin to be sent to the Loge server via a TCP connection. If the connection is broken or the Log server is not responding, the log files are temporarily stored on <em>/var/log/serverusage_cache.log</em> file and resent as soon the TCP connection is restored.
+When the service is started, the serverusage_client.ko SystemTap kernel module is executed via the staprun command and the output is piped to the serverusage_tcpsender.bin to be sent to the Log server via a TCP connection. If the connection is broken or the Log server is not responding, the log files are temporarily stored on <em>/var/log/serverusage_cache.log</em> file and resent as soon the TCP connection is restored.
 
 To start the service at boot you can use the following command:
 

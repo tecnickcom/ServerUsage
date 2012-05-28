@@ -106,7 +106,7 @@ This folder contains the source code of ServerUsage-Server:
 
 * serverusage_tcpreceiver.c
 
-	This program is compiled as serverusage_tcpsender.bin.
+	This program is compiled as serverusage_tcpreceiver.bin.
 	This program listen on specified IP:PORT for incoming TCP connections
 	(from ServerUsage-Client) and store the data on a SQLite database table.
 

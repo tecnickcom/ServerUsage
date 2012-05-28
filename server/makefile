@@ -5,7 +5,7 @@
 # Last Update : 2012-05-22
 # Version     : 4.5.0
 #
-# Website     : https:#github.com/fubralimited/ServerUsage
+# Website     : https://github.com/fubralimited/ServerUsage
 #
 # Description : Makefile to build ServerUsage-Server.
 #
