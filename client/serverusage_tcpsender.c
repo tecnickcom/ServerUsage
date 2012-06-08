@@ -2,8 +2,8 @@
 //=============================================================================+
 // File name   : serverusage_tcpsender.c
 // Begin       : 2012-02-28
-// Last Update : 2012-05-18
-// Version     : 4.5.0
+// Last Update : 2012-06-08
+// Version     : 4.6.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -134,6 +134,9 @@ int main(int argc, char *argv[]) {
 	// used to track errors when sending cached content
 	int cerr = 0;
 
+	// option for SOL_SOCKET
+	int optval = 1;
+
 	// initialize the si_server structure filling it with binary zeros
 	memset((char *) &si_server, 0, slen);
 
@@ -245,6 +248,12 @@ int main(int argc, char *argv[]) {
 						// print an error message
 						perror("ServerUsage-Client (socket)");
 					} else {
+
+						// set SO_REUSEADDR on socket to true (1):
+						if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
+							perror("ServerUsage-Server (setsockopt)");
+						}
+
 						// establish a connection to the server
 						if (connect(s, &si_server, slen) == -1) {
 							close(s);

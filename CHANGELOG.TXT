@@ -1,3 +1,6 @@
+4.6.0 (2012-06-08)
+	- TCP sender and receiver are now able to reuse previously unclosed connections.
+
 4.5.0 (2012-05-22)
 	- The program serverusage_tcpreceiver.c was improved to be thread safe.
 
