@@ -3,7 +3,7 @@
 // File name   : serverusage_tcpsender.c
 // Begin       : 2012-02-28
 // Last Update : 2012-06-13
-// Version     : 4.7.0
+// Version     : 4.8.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -161,14 +161,19 @@ int main(int argc, char *argv[]) {
 	// set the port to listen to, and ensure the correct byte order
 	si_server.sin6_port = htons(port);
 
+	// check if the program is in loop mode
+	int loopcontrol = 0;
+
 	// forever
-	while (1) {
+	while (loopcontrol < 2) {
 
 		rawbuf = NULL;
 		rblen = 0;
 
 		// read one line at time from stdin
 		if ((glen = getline(&rawbuf, &rblen, stdin)) != -1) {
+
+			loopcontrol = 0;
 
 			if ((rawbuf[0] == '@') && (rawbuf[1] == '@')) {
 				// valid line of data to be transmitted
@@ -286,6 +291,8 @@ int main(int argc, char *argv[]) {
 			}
 
 		} // end of getline
+
+		++loopcontrol;
 
 	} // end of while
 

@@ -1,7 +1,7 @@
 %define release 1
 
 Name:           serverusage_client
-Version:        4.7.0
+Version:        4.8.0
 Release:        %{release}%{?dist}
 Summary:        ServerUsage-Client collects server usage statistics and send them to a remote log server via TCP
 
