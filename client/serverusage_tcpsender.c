@@ -262,7 +262,7 @@ int main(int argc, char *argv[]) {
 
 						// set SO_REUSEADDR on socket to true (1):
 						if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
-							perror("ServerUsage-Client (setsockopt)");
+							perror("ServerUsage-Client (setsockopt : SOL_SOCKET - SO_REUSEADDR)");
 						}
 
 						// establish a connection to the server

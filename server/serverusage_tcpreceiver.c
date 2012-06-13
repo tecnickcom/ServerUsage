@@ -224,7 +224,7 @@ void *connection_thread(void *cargs) {
 	if (threadcounter == 1) {
 		#ifdef _DEBUG
 			starttime = time(NULL);
-			printf("START TIME [sec]: %d\n", starttime);
+			printf("  START TIME [sec]: %d\n", starttime);
 		#endif
 		// begin the transaction when the first thread is created (we use transactions to improve performances)
 		if (sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
@@ -295,7 +295,7 @@ void *connection_thread(void *cargs) {
 		}
 		#ifdef _DEBUG
 			endtime = time(NULL);
-			printf("  END TIME [sec]: %d\n", endtime);
+			printf("    END TIME [sec]: %d\n", endtime);
 			printf("ELAPSED TIME [sec]: %d\n\n", (endtime - starttime));
 		#endif
 	}
