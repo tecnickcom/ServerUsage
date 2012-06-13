@@ -238,9 +238,7 @@ void *connection_thread(void *cargs) {
 	while ((buflen = read(arg.socket_conn, buf, READBUFLEN)) > 0) {
 
 		// mark the end of buffer (used to recompose splitted lines)
-		if (buf[(buflen - 1)] != 2) {
-			buf[buflen] = 2;
-		}
+		buf[buflen] = 2;
 
 		// split stream into lines
 		row = strtok_r(buf, delims, &endstr);
