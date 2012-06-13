@@ -2,8 +2,7 @@
 //=============================================================================+
 // File name   : serverusage_tcpreceiver.c
 // Begin       : 2012-02-14
-// Last Update : 2012-06-08
-// Version     : 4.6.0
+// Last Update : 2012-06-13
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -49,7 +48,7 @@
 
 // USAGE EXAMPLES:
 // ./serverusage_tcpreceiver.bin PORT MAX_CONNECTIONS "database"
-// ./serverusage_tcpreceiver.bin 9930 100 "/var/lib/serverusage.db"
+// ./serverusage_tcpreceiver.bin 9930 100 "/var/lib/serverusage/serverusage.db"
 
 // NOTE: For the SQLite table used to to store data, please consult the SQL file on this project.
 
@@ -113,7 +112,7 @@ int threadcounter = 0;
  */
 typedef struct _targs {
 	int socket_conn;
-	char clientip[40];
+	char clientip[INET6_ADDRSTRLEN];
 	unsigned int clientport;
 } targs;
 
@@ -141,6 +140,12 @@ void insert_row(char *row, const char *clientip, unsigned int clientport) {
 
 	// pointer for strtok_r
 	char *endstr = NULL;
+
+	// check if the line is correctly formatted
+	if ((row[0] != '@') || (row[1] != '@') || (row[2] != '\t')) {
+		perror("ServerUsage-Server (insert_row : invalid line)");
+		return;
+	}
 
 	// remove first 3 characters "@@\t"
 	memmove(row, (row + 3), strlen(row));
@@ -230,12 +235,9 @@ void *connection_thread(void *cargs) {
 	sem_post(&mutex);
 
 	// receive a message from ns and put data int buf (limited to BUFLEN characters)
-	while (read(arg.socket_conn, buf, READBUFLEN) > 0) {
+	while ((buflen = read(arg.socket_conn, buf, READBUFLEN)) > 0) {
 
-		// length of buffer
-		buflen = strlen(buf);
-
-		// add a buffer terminator if missing
+		// mark the end of buffer (used to recompose splitted lines)
 		if (buf[(buflen - 1)] != 2) {
 			buf[buflen] = 2;
 		}
@@ -245,6 +247,7 @@ void *connection_thread(void *cargs) {
 
 		// for each line on buf
 		while (row != NULL) {
+
 			pos = (strlen(row) - 1);
 			if (row[pos] == 2) { // the line is incomplete
 				if (pos > 0) { // avoid lines that contains only the terminator character
@@ -255,7 +258,7 @@ void *connection_thread(void *cargs) {
 				}
 			} else { // we reached the end of a line
 				if (splitline == 1) { // reconstruct splitted line
-					if ((row[0] != '@') || (row[2] != '\t')) {
+					if ((row[0] != '@') || (row[1] != '@') || (row[2] != '\t')) {
 						// recompose the line
 						strcat(lastrow, row);
 						// insert row on database
@@ -316,32 +319,15 @@ void *connection_thread(void *cargs) {
  */
 int main(int argc, char *argv[]) {
 
-	// structure containing an Internet socket address: an address family (always AF_INET for our purposes), a port number, an IP address
-	// si_server defines the socket where the server will listen.
-	struct sockaddr_in si_server;
-
-	// defines the socket at the other end of the link (that is, the client)
-	struct sockaddr_in si_client;
-
-	// size of si_client
-	int slen = sizeof(si_client);
-
-	// socket
-	int s = -1;
-
-	// new socket
-	int ns = -1;
-
-	// option for SOL_SOCKET
-	int optval = 1;
-
-	// thread number
-	int tn = 0;
-
 	// decode arguments
 	if (argc != 4) {
 		diep("This program listen on specified IP:PORT for incoming TCP messages from serverusage_tcpsender.bin, and store the data on a SQLite database memory table.\nYou must provide 3 arguments: port, max_conenctions, sqlite_database\nFOR EXAMPLE:\n./serverusage_tcpreceiver.bin 9930 100 \"/var/lib/serverusage/serverusage.db\"");
 	}
+
+	// set input values
+	int port = atoi(argv[1]);
+	int maxconn = atoi(argv[2]);
+	char *database = (char *)argv[3];
 
 	// thread identifier
 	pthread_t tid;
@@ -349,10 +335,11 @@ int main(int argc, char *argv[]) {
 	// thread attributes
 	pthread_attr_t tattr;
 
-	// set input values
-	int port = atoi(argv[1]);
-	int maxconn = atoi(argv[2]);
-	char *database = (char *)argv[3];
+	// option for SOL_SOCKET
+	int optval = 1;
+
+	// thread number
+	int tn = 0;
 
 	// arguments be passes on thread
 	targs cargs[maxconn];
@@ -379,32 +366,53 @@ int main(int argc, char *argv[]) {
 		diep(sqlite3_errmsg(db));
 	}
 
+	// structure containing an Internet socket address: an address family (always AF_INET for our purposes), a port number, an IP address
+	// si_server defines the socket where the server will listen.
+	struct sockaddr_in6 si_server;
+
+	// defines the socket at the other end of the link (that is, the client)
+	struct sockaddr_in6 si_client;
+
+	// size of si_client
+	int slen = sizeof(si_client);
+
+	// socket
+	int s = -1;
+
+	// new socket
+	int ns = -1;
+
+	// initialize the si_server structure filling it with binary zeros
+	memset((char *) &si_server, 0, slen);
+
+	// use internet address
+	si_server.sin6_family = AF_INET6;
+
+	// listen to any IP address
+	si_server.sin6_addr = in6addr_any;
+
+	// set the port to listen to, and ensure the correct byte order
+	si_server.sin6_port = htons(port);
+
 	// Create a network socket.
 	// AF_INET says that it will be an Internet socket.
 	// SOCK_STREAM Provides sequenced, reliable, two-way, connection-based byte streams.
-	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+	if ((s = socket(si_server.sin6_family, SOCK_STREAM, 0)) == -1) {
 		diep("ServerUsage-Server (socket)");
+	}
+
+	// set socket to listen only IPv6
+	if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &optval, sizeof(optval)) == -1) {
+		diep("ServerUsage-Server (setsockopt : IPPROTO_IPV6 - IPV6_V6ONLY)");
 	}
 
 	// set SO_REUSEADDR on socket to true (1):
 	if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
-		diep("ServerUsage-Server (setsockopt)");
+		diep("ServerUsage-Server (setsockopt : SOL_SOCKET - SO_REUSEADDR)");
 	}
 
-	// initialize the si_server structure filling it with binary zeros
-	memset((char *) &si_server, 0, sizeof(si_server));
-
-	// use internet address
-	si_server.sin_family = AF_INET;
-
-	// set the port to listen to, and ensure the correct byte order
-	si_server.sin_port = htons(port);
-
-	// bind to any IP address
-	si_server.sin_addr.s_addr = htonl(INADDR_ANY);
-
 	// bind the socket s to the address in si_server.
-	if (bind(s, (struct sockaddr *) &si_server, sizeof(si_server)) == -1) {
+	if (bind(s, (struct sockaddr *) &si_server, slen) == -1) {
 		diep("ServerUsage-Server (bind)");
 	}
 
@@ -420,16 +428,16 @@ int main(int argc, char *argv[]) {
 		// accept a connection on a socket
 		if ((ns = accept(s, (struct sockaddr *) &si_client, &slen)) == -1) {
 			// print an error message
-			perror("ServerUsage-Client (accept)");
+			perror("ServerUsage-Server (accept)");
 			// retry after 1 second
 			sleep(1);
 		} else {
 
 			// prepare data for the thread
 			cargs[tn].socket_conn = ns;
-			memset(cargs[tn].clientip, 0, 40);
-			strcpy(cargs[tn].clientip, inet_ntoa(si_client.sin_addr));
-			cargs[tn].clientport = ntohs(si_client.sin_port);
+			memset(cargs[tn].clientip, 0, INET6_ADDRSTRLEN);
+			inet_ntop(si_server.sin6_family, &si_client.sin6_addr, cargs[tn].clientip, INET6_ADDRSTRLEN);
+			cargs[tn].clientport = ntohs(si_client.sin6_port);
 
 			// handle each connection on a separate thread
 			pthread_attr_init(&tattr);

@@ -1,3 +1,6 @@
+4.7.0 (2012-06-13)
+	- TCP sender and receiver are set to use IPv6 protocol by default.
+
 4.6.0 (2012-06-08)
 	- TCP sender and receiver are now able to reuse previously unclosed connections.
 

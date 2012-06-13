@@ -2,8 +2,8 @@
 //=============================================================================+
 // File name   : serverusage_tcpsender.c
 // Begin       : 2012-02-28
-// Last Update : 2012-06-08
-// Version     : 4.6.0
+// Last Update : 2012-06-13
+// Version     : 4.7.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -93,18 +93,6 @@ void appendlog(const char *s, const char *file) {
  */
 int main(int argc, char *argv[]) {
 
-	// file pointer
-	char *ch = NULL;
-
-	// structure containing an Internet socket address for server: an address family (always AF_INET for our purposes), a port number, an IP address
-	struct sockaddr_in si_server;
-
-	// size of si_server
-	int slen = sizeof(si_server);
-
-	// socket
-	int s;
-
 	// decode arguments
 	if (argc != 4) {
 		perror("This program accept a text as input from serverusage_client.ko module and sends data via TCP to the specified IP:PORT.\nYou must provide 3 arguments: ip_address, port, local_cache_file\nFOR EXAMPLE:\n./serverusage_tcpsender.bin \"127.0.0.1\" 9930 \"/var/log/serverusage_cache.log\"");
@@ -116,8 +104,23 @@ int main(int argc, char *argv[]) {
 	int port = atoi(argv[2]);
 	char *cachelog = (char *)argv[3];
 
+	// file pointer
+	char *ch = NULL;
+
 	// buffer used for a single log line
 	char buf[BUFLEN];
+
+	// initialize buffer
+	memset(buf, 0, BUFLEN);
+
+	// buffer used to read input data
+	char *rawbuf = NULL;
+
+	// length of the raw buffer
+	size_t rblen = 0;
+
+	// count read chars with getline
+	int glen = 0;
 
 	// file pointer for local cache
 	FILE *fp;
@@ -134,50 +137,53 @@ int main(int argc, char *argv[]) {
 	// used to track errors when sending cached content
 	int cerr = 0;
 
+	// socket
+	int s = -1;
+
 	// option for SOL_SOCKET
 	int optval = 1;
+
+	// structure containing an Internet socket address for server
+	struct sockaddr_in6 si_server;
+
+	// size of si_server
+	int slen = sizeof(si_server);
 
 	// initialize the si_server structure filling it with binary zeros
 	memset((char *) &si_server, 0, slen);
 
-	// use internet address
-	si_server.sin_family = AF_INET;
+	// use IPv6 internet address
+	si_server.sin6_family = AF_INET6;
 
 	// set the IP address we want to bind to.
-	si_server.sin_addr.s_addr = inet_addr(ipaddress);
+	inet_pton(si_server.sin6_family, ipaddress, &(si_server.sin6_addr));
 
 	// set the port to listen to, and ensure the correct byte order
-	si_server.sin_port = htons(port);
-
-	// initialize buffer
-	memset(buf, 0, BUFLEN);
-
-	// initialize socket
-	s = -1;
+	si_server.sin6_port = htons(port);
 
 	// forever
 	while (1) {
 
+		rawbuf = NULL;
+		rblen = 0;
+
 		// read one line at time from stdin
-		if (scanf("%512[^\n]s", &buf)) {
+		if ((glen = getline(&rawbuf, &rblen, stdin)) != -1) {
 
-			if ((buf[0] == '@') && (buf[1] == '@')) {
+			if ((rawbuf[0] == '@') && (rawbuf[1] == '@')) {
 				// valid line of data to be transmitted
-
-				// add a newline character
-				strcat(buf, "\n");
 
 				// check for the socket
 				if (s > 0) {
 
 					// send line
-					if (sendto(s, buf, strlen(buf), 0, NULL, 0) == -1) {
+					if (send(s, rawbuf, glen, 0) == -1) {
 
 						// output an error message
 						perror("ServerUsage-Client (sendto)");
 
 						// log the file on local cache
-						appendlog(buf, cachelog);
+						appendlog(rawbuf, cachelog);
 
 					} else { // the line has been successfully sent
 
@@ -193,7 +199,7 @@ int main(int argc, char *argv[]) {
 								// check for valid lines
 								if ((buf[0] == '@') && ((blen = strlen(buf)) > 30)) {
 									// send line
-									if (sendto(s, buf, blen, 0, NULL, 0) == -1) {
+									if (send(s, buf, blen, 0) == -1) {
 										// output an error message
 										perror("ServerUsage-Client (sendto)");
 										// mark error
@@ -226,12 +232,12 @@ int main(int argc, char *argv[]) {
 				} else { // we do not have a valid socket
 
 					// log the file on local cache
-					appendlog(buf, cachelog);
+					appendlog(rawbuf, cachelog);
 				}
 
 			} else {
 
-				if ((buf[0] == '@') && (buf[1] == 'S')) {
+				if ((rawbuf[0] == '@') && (rawbuf[1] == 'S')) {
 					// this line indicates a starting block of data: open a TCP connection
 
 					// check if a previous socket exist
@@ -244,14 +250,19 @@ int main(int argc, char *argv[]) {
 					// start of block of data : create a network socket.
 					// AF_INET says that it will be an Internet socket.
 					// SOCK_STREAM Provides sequenced, reliable, two-way, connection-based byte streams.
-					if ((s = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+					if ((s = socket(si_server.sin6_family, SOCK_STREAM, 0)) == -1) {
 						// print an error message
 						perror("ServerUsage-Client (socket)");
 					} else {
 
+						// set socket to listen only IPv6
+						if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &optval, sizeof(optval)) == -1) {
+							perror("ServerUsage-Client (setsockopt : IPPROTO_IPV6 - IPV6_V6ONLY)");
+						}
+
 						// set SO_REUSEADDR on socket to true (1):
 						if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
-							perror("ServerUsage-Server (setsockopt)");
+							perror("ServerUsage-Client (setsockopt)");
 						}
 
 						// establish a connection to the server
@@ -265,7 +276,7 @@ int main(int argc, char *argv[]) {
 
 				} else {
 
-					if ((buf[0] == '@') && (buf[1] == 'E')) {
+					if ((rawbuf[0] == '@') && (rawbuf[1] == 'E')) {
 						// this line indicates an ending block of data: close the socket
 						close(s);
 						s = -1;
@@ -274,15 +285,13 @@ int main(int argc, char *argv[]) {
 				}
 			}
 
-			// skip newline characters
-			while (scanf("%1[\n]s", &buf)) {}
+		} // end of getline
 
-		}
-
-	}
+	} // end of while
 
 	// free resources
 	free(ch);
+	free(rawbuf);
 	free(ipaddress);
 	free(cachelog);
 
