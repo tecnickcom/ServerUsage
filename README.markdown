@@ -44,18 +44,12 @@ This project is composed by 2 sub-projects:
 
 ## ServerUsage-Client ##
 
-The ServerUsage-Client program is composed by two main sections: the SystemTap
-(http://sourceware.org/systemtap) serverusage_client.ko kernel module to collect
-and output usage statistics of the machine where it is installed, and the
-serverusage_tcpsender.bin to send the output to a log server via TCP.
+The ServerUsage-Client program is composed by two main sections: the SystemTap (http://sourceware.org/systemtap) serverusage_client.ko kernel module to collect and output usage statistics of the machine where it is installed, and the serverusage_tcpsender.bin to send the output to a log server via TCP.
 
 
 ## ServerUsage-Server ##
 
-The ServerUsage-Server program listen on a TCP port for incoming log data 
-(from ServerUsage-Client) and store them on a SQLite table. An SQL file 
-(serverusage_dbagg.sh) is executed periodically to aggregate data on another 
-table and delete obsolete data.
+The ServerUsage-Server program listen on a TCP port for incoming log data (from ServerUsage-Client) and store them on a SQLite table. An script (serverusage_dbagg.sh) is executed periodically to aggregate data on another table and delete obsolete data.
 
 The serverusage_api.php script can be remotely used to extract formatted data 
 from the database or display graphs.
