@@ -1,3 +1,9 @@
+5.0.0 (2012-07-16)
+	- Various memory allocation and segmentation fault problems were fixed.
+
+4.9.0 (2012-07-13)
+	- A memory allocation problem was fixed.
+
 4.8.0 (2012-06-13)
 	- TCP sender was improved to avoid infinite loops.
 

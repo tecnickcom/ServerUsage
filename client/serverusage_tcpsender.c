@@ -2,8 +2,8 @@
 //=============================================================================+
 // File name   : serverusage_tcpsender.c
 // Begin       : 2012-02-28
-// Last Update : 2012-06-13
-// Version     : 4.8.0
+// Last Update : 2012-06-16
+// Version     : 5.0.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -73,12 +73,11 @@
  * @param s string to append on log.
  */
 void appendlog(const char *s, const char *file) {
-	FILE *fp = NULL;
+	FILE *fpal = NULL;
 	int ret = EOF;
-	fp = fopen(file, "a");
-	if (fp != NULL) {
-		ret = fputs(s, fp);
-		fclose(fp);
+	if ((fpal = fopen(file, "a")) != NULL) {
+		ret = fputs(s, fpal);
+		fclose(fpal);
 	}
 	if (ret == EOF) {
 		// output an error message
@@ -100,12 +99,15 @@ int main(int argc, char *argv[]) {
 	}
 
 	// set input values
-	char *ipaddress = (char *)argv[1];
-	int port = atoi(argv[2]);
-	char *cachelog = (char *)argv[3];
 
-	// file pointer
-	char *ch = NULL;
+	// the IP address of the listening remote log server
+	char *ipaddress = (char *)argv[1];
+
+	// the TCP	port of the listening remote log server
+	int port = atoi(argv[2]);
+
+	// the local cache file to temporarily store the logs when the TCP connection is not available
+	char *cachelog = (char *)argv[3];
 
 	// buffer used for a single log line
 	char buf[BUFLEN];
@@ -193,9 +195,7 @@ int main(int argc, char *argv[]) {
 					} else { // the line has been successfully sent
 
 						// try to send log files on cache (if any)
-						fp = fopen(cachelog, "rwb+");
-
-						if (fp != NULL) {
+						if ((fp = fopen(cachelog, "rwb+")) != NULL) {
 							// get starting line position
 							cpos = ftell(fp);
 							cerr = 0;
@@ -230,6 +230,8 @@ int main(int argc, char *argv[]) {
 								remove(cachelog);
 							}
 							fclose(fp);
+						} else {
+							clearerr(fp);
 						}
 
 					} // end of else - when sending is working
@@ -290,6 +292,8 @@ int main(int argc, char *argv[]) {
 				}
 			}
 
+			free(rawbuf);
+
 		} // end of getline
 
 		++loopcontrol;
@@ -297,10 +301,9 @@ int main(int argc, char *argv[]) {
 	} // end of while
 
 	// free resources
-	free(ch);
-	free(rawbuf);
-	free(ipaddress);
-	free(cachelog);
+	if (s > 0) {
+		close(s);
+	}
 
 	// close program and return 0
 	return 0;
