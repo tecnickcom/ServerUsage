@@ -2,8 +2,8 @@
 //=============================================================================+
 // File name   : serverusage_tcpsender.c
 // Begin       : 2012-02-28
-// Last Update : 2012-06-16
-// Version     : 5.0.0
+// Last Update : 2012-06-17
+// Version     : 5.1.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
 		rblen = 0;
 
 		// read one line at time from stdin
-		if ((glen = getline(&rawbuf, &rblen, stdin)) != -1) {
+		if ((glen = getline(&rawbuf, &rblen, stdin)) > 3) && (glen < BUFLEN)) {
 
 			loopcontrol = 0;
 
@@ -294,7 +294,7 @@ int main(int argc, char *argv[]) {
 
 			free(rawbuf);
 
-		} // end of getline
+		} // end getline
 
 		++loopcontrol;
 

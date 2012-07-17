@@ -1,7 +1,7 @@
 %define release 1
 
 Name:           serverusage_server
-Version:        5.0.0
+Version:        5.1.0
 Release:        %{release}%{?dist}
 Summary:        ServerUsage-Server collects logs data via TCP from ServerUsage-Client
 
@@ -12,7 +12,7 @@ Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  sqlite-devel > 3.6.0, elfutils-devel
-Requires:       httpd >= 2.0.0, sqlite >= 3.6.0, php >= 5.3.0, php-common >= 5.3.0, php-pdo >= 5.3.0
+Requires:       httpd >= 2.0.0, sqlite >= 3.6.0, php >= 5.3.0, php-common >= 5.3.0, php-pdo >= 5.3.0, crontabs
 
 %description
 The ServerUsage-Server is a program to collect and process log data sent by
@@ -49,6 +49,9 @@ make clean
 /var/www/serverusage/serverusage_svg.html
 
 %changelog
+* Thu Jul 17 2012 Nicola Asuni
+- Added dependency for crontabs.
+
 * Thu May 15 2012 Nicola Asuni
 - SQLite is now used as back-end database.
 

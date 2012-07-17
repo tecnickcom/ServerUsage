@@ -1,3 +1,6 @@
+5.1.0 (2012-07-17)
+	- A segmentation fault problems were fixed.
+
 5.0.0 (2012-07-16)
 	- Various memory allocation and segmentation fault problems were fixed.
 
