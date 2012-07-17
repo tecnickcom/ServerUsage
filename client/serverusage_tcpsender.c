@@ -231,7 +231,9 @@ int main(int argc, char *argv[]) {
 							}
 							fclose(fp);
 						} else {
-							clearerr(fp);
+							if (fp != NULL) {
+								clearerr(fp);
+							}
 						}
 
 					} // end of else - when sending is working
