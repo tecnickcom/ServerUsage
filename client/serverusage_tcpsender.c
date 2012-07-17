@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
 		rblen = 0;
 
 		// read one line at time from stdin
-		if ((glen = getline(&rawbuf, &rblen, stdin)) > 3) && (glen < BUFLEN)) {
+		if (((glen = getline(&rawbuf, &rblen, stdin)) > 3) && (glen < BUFLEN)) {
 
 			loopcontrol = 0;
 
