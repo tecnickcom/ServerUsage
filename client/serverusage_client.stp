@@ -3,8 +3,8 @@
 //=============================================================================+
 // File name   : serverusage_client.stp
 // Begin       : 2012-02-02
-// Last Update : 2012-05-16
-// Version     : 5.1.0
+// Last Update : 2012-07-18
+// Version     : 5.2.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -43,7 +43,7 @@
 //=============================================================================+
 
 
-// COMPILING: stap -m serverusage_client -v -p4 serverusage_client.stp -D MAXACTION=1000000 MAXMAPENTRIES=1000000 MAXSTRINGLEN=512
+// COMPILING: stap -m serverusage_client -v -p4 --suppress-handler-errors serverusage_client.stp -D MAXACTION=1000000 MAXMAPENTRIES=1000000 MAXSTRINGLEN=512
 
 // USAGE: staprun -b 1024 serverusage_client.ko smp=2 srvid="localhost"
 
@@ -151,9 +151,9 @@ probe perf.sw.cpu_clock {
 	// server ip
 	iplocal = "0";
 	// store ticks for each process and UID
-	ticks[e,u,iplocal] += 1
+	ticks[e,u,iplocal] <<< 1
 	// record this key
-	rowkey[e,u,iplocal] = 1
+	rowkey[e,u,iplocal] <<< 1
 }
 
 /**
@@ -167,11 +167,11 @@ probe ioblock.request {
 	// server ip
 	iplocal = "0";
 	if (bio_rw_num(rw) == BIO_WRITE) // add number of written bytes
-		iowrite[e,u,iplocal] += size
+		iowrite[e,u,iplocal] <<< size
 	else // add number of read bytes
-		ioread[e,u,iplocal] += size
+		ioread[e,u,iplocal] <<< size
 	// record this key
-	rowkey[e,u,iplocal] = 1
+	rowkey[e,u,iplocal] <<< 1
 }
 
 /**
@@ -189,9 +189,9 @@ probe tcp.sendmsg,udp.sendmsg {
 	// convert IP address to string
 	iplocal = ip_ntop(iptemp)
 	// add bytes received
-	netout[e,u,iplocal] += size
+	netout[e,u,iplocal] <<< size
 	// record this key
-	rowkey[e,u,iplocal] = 1
+	rowkey[e,u,iplocal] <<< 1
 }
 
 /**
@@ -209,9 +209,9 @@ probe tcp.recvmsg,udp.recvmsg {
 	// convert IP address to string
 	iplocal = ip_ntop(iptemp)
 	// add bytes received
-	netin[e,u,iplocal] += size
+	netin[e,u,iplocal] <<< size
 	// record this key
-	rowkey[e,u,iplocal] = 1
+	rowkey[e,u,iplocal] <<< 1
 }
 
 // --- DATA OUTPUT -------------------------------------------------------------
@@ -234,7 +234,7 @@ probe timer.ms(250) {
 			// print log rows
 			foreach ([pro,uid,iplocal] in rowkey) {
 				// print a log row
-				printf("@@\t%d\t%d\t%s\t%s\t%d\t%s\t%d\t%d\t%d\t%d\t%d\n", starttime, time, pro, srvid, uid, iplocal, ticks[pro,uid,iplocal], ioread[pro,uid,iplocal], iowrite[pro,uid,iplocal], netin[pro,uid,iplocal], netout[pro,uid,iplocal])
+				printf("@@\t%d\t%d\t%s\t%s\t%d\t%s\t%d\t%d\t%d\t%d\t%d\n", starttime, time, pro, srvid, uid, iplocal, @sum(ticks[pro,uid,iplocal]), @sum(ioread[pro,uid,iplocal]), @sum(iowrite[pro,uid,iplocal]), @sum(netin[pro,uid,iplocal]), @sum(netout[pro,uid,iplocal]))
 			}
 			// mark the end of this block of data with an empty line
 			printf("@E\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\n")

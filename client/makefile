@@ -2,8 +2,8 @@
 #==============================================================================+
 # File name   : makefile
 # Begin       : 2012-04-16
-# Last Update : 2012-05-11
-# Version     : 5.1.0
+# Last Update : 2012-07-18
+# Version     : 5.2.0
 #
 # Website     : https:#github.com/fubralimited/ServerUsage
 #
@@ -60,7 +60,7 @@ endif
 # COMPILE THE TCP SENDER AND SYSTEMTAP KERNEL MODULE
 all:
 	$(CC) $(CFLAGS) -o serverusage_tcpsender.bin serverusage_tcpsender.c
-	stap -m serverusage_client -v -p4 serverusage_client.stp -D MAXACTION=1000000 MAXMAPENTRIES=1000000 MAXSTRINGLEN=512
+	stap -m serverusage_client -v -p4 --suppress-handler-errors serverusage_client.stp -D MAXACTION=1000000 MAXMAPENTRIES=1000000 MAXSTRINGLEN=512
 
 # INSTALL ALL EXECUTABLES
 install:

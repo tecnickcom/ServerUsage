@@ -1,3 +1,7 @@
+5.2.0 (2012-07-18)
+	- Switch to using contention-free aggregates for the systemtap script.
+	- SystemTap skipped probes are now ignored to avoid early program termination.
+
 5.1.0 (2012-07-17)
 	- A segmentation fault problems were fixed.
 

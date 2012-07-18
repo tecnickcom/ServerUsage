@@ -3,7 +3,7 @@ ServerUsage - README
 
 + Name: ServerUsage
 
-+ Version: 5.1.0
++ Version: 5.2.0
 
 + Release date: 2012-06-17
 
@@ -191,7 +191,7 @@ The ServerUsage-Server RPM must be installed only on the Log Server (the compute
 
 As root install the ServerUsage-Server RPM file:
 
-	# rpm -i serverusage_server-5.1.0-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_server-5.2.0-1.el6.$(uname -m).rpm
 	
 Once the RPM is installed you can configure the ServerUsage-Server editing the following file:
 
@@ -220,7 +220,7 @@ The ServerUsage-Client RPM must be installed on each client computer to monitor.
 As root install the SystemTap-Runtime and ServerUsage-Client RPM files:
 
 	# rpm -i systemtap-runtime-1.7-1.el6.$(uname -m).rpm 
-	# rpm -i serverusage_client-5.1.0-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_client-5.2.0-1.el6.$(uname -m).rpm
 
 Configure the ServerUsage-Client
 
