@@ -1,3 +1,6 @@
+5.3.0 (2012-08-08)
+	- IPV6_V6ONLY option was set to false to accept IPv4 connections.
+
 5.2.0 (2012-07-18)
 	- Switch to using contention-free aggregates for the systemtap script.
 	- SystemTap skipped probes are now ignored to avoid early program termination.

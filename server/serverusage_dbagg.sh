@@ -1,9 +1,9 @@
 #!/bin/sh
 #===============================================================================
-# File name   : serverusage_dbagg.sql
+# File name   : serverusage_dbagg.sh
 # Begin       : 2012-02-14
-# Last Update : 2012-05-17
-# Version     : 5.2.0
+# Last Update : 2012-08-08
+# Version     : 5.3.0
 #
 # Website     : https://github.com/fubralimited/ServerUsage
 #

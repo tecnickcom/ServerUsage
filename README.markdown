@@ -3,9 +3,9 @@ ServerUsage - README
 
 + Name: ServerUsage
 
-+ Version: 5.2.0
++ Version: 5.3.0
 
-+ Release date: 2012-06-17
++ Release date: 2012-08-08
 
 + Author: Nicola Asuni
 
@@ -70,8 +70,9 @@ HOW-TO CREATE ServerUsage RPMs
 ------------------------------
 
 This is a short hands-on tutorial on creating RPM files for the ServerUsage project.
-NOTE: The sever configuration for ServerUsage-Client and ServerUsage-Server may be different, so this process must be executed in different environments.
+For an automatic building script for CentOS and the latest RPM packages please check the CatN Repository: https://github.com/fubralimited/CatN-Repo
 
+NOTE: The sever configuration for ServerUsage-Client and ServerUsage-Server may be different, so this process must be executed in different environments.
 
 ## DEVELOPMENT ENVIRONMENT ##
 
@@ -92,25 +93,9 @@ The following packages are required to create ServerUsage RPMs:
 
 	# yum install kernel-devel elfutils-devel sqlite-devel.x86_64 sqlite.x86_64
 
-For CentOS 6:
+Install SystemTap:
 
-	# wget http://debuginfo.centos.org/6/$(uname -m)/kernel-debug-debuginfo-$(uname -r).rpm
-	# wget http://debuginfo.centos.org/6/$(uname -m)/kernel-debuginfo-$(uname -r).rpm
-	# wget http://debuginfo.centos.org/6/$(uname -m)/kernel-debuginfo-common-$(uname -m)-$(uname -r).rpm
-
-For Scientific Linux 6:
-
-	# wget http://ftp1.scientificlinux.org/linux/scientific/6rolling/archive/debuginfo/kernel-debug-debuginfo-$(uname -r).rpm
-	# wget http://ftp1.scientificlinux.org/linux/scientific/6rolling/archive/debuginfo/kernel-debuginfo-$(uname -r).rpm
-	# wget http://ftp1.scientificlinux.org/linux/scientific/6rolling/archive/debuginfo/kernel-debuginfo-common-$(uname -m)-$(uname -r).rpm
-
-Install packages:
-
-	# yum install kernel-debug-debuginfo-$(uname -r).rpm kernel-debuginfo-$(uname -r).rpm kernel-debuginfo-common-$(uname -m)-$(uname -r).rpm
-
-The following packages are required to create systemtap RPMs:
-
-	# yum install sqlite-devel crash-devel rpm-devel nss-devel avahi-devel latex2html xmlto xmlto-tex publican publican-fedora gtkmm24-devel libglademm24-devel boost-devel
+	# yum -y install systemtap systemtap-client systemtap-devel systemtap-runtime systemtap-initscript systemtap-grapher systemtap-sdt-devel systemtap-server systemtap-testsuite
 
 Create a dummy user specifically for creating RPM packages:
 
@@ -122,36 +107,6 @@ Reboot the machine, log as makerpm user and create the required directory struct
 	$ rpmdev-setuptree
 
 The rpmdev-setuptree program will create the ~/rpmbuild directory and a set of subdirectories (e.g. SPECS and BUILD), which you will use for creating your packages. The ~/.rpmmacros file is also created, which can be used for setting various options. 
-
-
-## CREATE THE SYSTEMTAP RPM ##
-
-copy the systemtap.spec file on ~/rpmbuild/SPECS
-
-	$ cp systemtap.spec ~/rpmbuild/SPECS
-
-copy the systemtap 1.7 source file into ~/rpmbuild/SOURCES
-
-	$ cd ~/rpmbuild/SOURCES
-	$ wget http://sourceware.org/systemtap/ftp/releases/systemtap-1.7.tar.gz
-
-create the SystemTap RPMs
-
-	$ cd ~/rpmbuild/SPECS/
-	$ rpmbuild -ba systemtap.spec
-
-
-## INSTALL THE THE SYSTEMTAP RPM ##
-
-	$ cd ~/rpmbuild/RPMS/$(uname -m)
-
-As root, remove previous SystemTap installations:
-
-	# yum remove systemtap\*
-
-Reboot the machine and as root install new SystemTap RPMs:
-
-	# rpm -i systemtap-1.7-1.el6.$(uname -m).rpm systemtap-client-1.7-1.el6.$(uname -m).rpm systemtap-debuginfo-1.7-1.el6.$(uname -m).rpm systemtap-devel-1.7-1.el6.$(uname -m).rpm systemtap-grapher-1.7-1.el6.$(uname -m).rpm systemtap-initscript-1.7-1.el6.$(uname -m).rpm systemtap-runtime-1.7-1.el6.$(uname -m).rpm systemtap-sdt-devel-1.7-1.el6.$(uname -m).rpm systemtap-server-1.7-1.el6.$(uname -m).rpm
 
 
 ## CREATE THE ServerUsage RPMs ##
@@ -191,7 +146,7 @@ The ServerUsage-Server RPM must be installed only on the Log Server (the compute
 
 As root install the ServerUsage-Server RPM file:
 
-	# rpm -i serverusage_server-5.2.0-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_server-5.3.0-1.el6.$(uname -m).rpm
 	
 Once the RPM is installed you can configure the ServerUsage-Server editing the following file:
 
@@ -220,7 +175,7 @@ The ServerUsage-Client RPM must be installed on each client computer to monitor.
 As root install the SystemTap-Runtime and ServerUsage-Client RPM files:
 
 	# rpm -i systemtap-runtime-1.7-1.el6.$(uname -m).rpm 
-	# rpm -i serverusage_client-5.2.0-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_client-5.3.0-1.el6.$(uname -m).rpm
 
 Configure the ServerUsage-Client
 

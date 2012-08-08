@@ -2,8 +2,8 @@
 //=============================================================================+
 // File name   : serverusage_tcpsender.c
 // Begin       : 2012-02-28
-// Last Update : 2012-06-17
-// Version     : 5.2.0
+// Last Update : 2012-08-08
+// Version     : 5.3.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -142,8 +142,11 @@ int main(int argc, char *argv[]) {
 	// socket
 	int s = -1;
 
-	// option for SOL_SOCKET
-	int optval = 1;
+	// true option for setsockopt
+	int opttrue = 1;
+	
+	// false option for setsockopt
+	int optfalse = 0;
 
 	// structure containing an Internet socket address for server
 	struct sockaddr_in6 si_server;
@@ -264,13 +267,13 @@ int main(int argc, char *argv[]) {
 						perror("ServerUsage-Client (socket)");
 					} else {
 
-						// set socket to listen only IPv6
-						if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &optval, sizeof(optval)) == -1) {
+						// set socket to listen on IPv6 and IPv4
+						if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &optfalse, sizeof(optfalse) == -1) {
 							perror("ServerUsage-Client (setsockopt : IPPROTO_IPV6 - IPV6_V6ONLY)");
 						}
 
 						// set SO_REUSEADDR on socket to true (1):
-						if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
+						if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opttrue, sizeof(opttrue)) == -1) {
 							perror("ServerUsage-Client (setsockopt : SOL_SOCKET - SO_REUSEADDR)");
 						}
 
