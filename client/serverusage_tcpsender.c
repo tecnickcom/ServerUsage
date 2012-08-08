@@ -268,7 +268,7 @@ int main(int argc, char *argv[]) {
 					} else {
 
 						// set socket to listen on IPv6 and IPv4
-						if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &optfalse, sizeof(optfalse) == -1) {
+						if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &optfalse, sizeof(optfalse)) == -1) {
 							perror("ServerUsage-Client (setsockopt : IPPROTO_IPV6 - IPV6_V6ONLY)");
 						}
 
