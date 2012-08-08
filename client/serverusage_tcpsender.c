@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
 	int opttrue = 1;
 	
 	// false option for setsockopt
-	int optfalse = 0;
+	//int optfalse = 0;
 
 	// structure containing an Internet socket address for server
 	struct sockaddr_in6 si_server;
@@ -268,7 +268,7 @@ int main(int argc, char *argv[]) {
 					} else {
 
 						// set socket to listen on IPv6 and IPv4
-						if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &optfalse, sizeof(optfalse)) == -1) {
+						if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &opttrue, sizeof(opttrue)) == -1) {
 							perror("ServerUsage-Client (setsockopt : IPPROTO_IPV6 - IPV6_V6ONLY)");
 						}
 
