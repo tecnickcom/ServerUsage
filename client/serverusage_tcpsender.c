@@ -274,13 +274,13 @@ int main(int argc, char *argv[]) {
 										continue;
 									} else {
 										// handle unknown protocol errors
-										perror("ServerUsage-Server (socket)");
+										perror("ServerUsage-Client (socket)");
 										break;
 									}
 								}
 								default: {
 									// handle other socket errors
-									perror("ServerUsage-Server (socket)");
+									perror("ServerUsage-Client (socket)");
 									break;
 								}
 							}
@@ -289,13 +289,13 @@ int main(int argc, char *argv[]) {
 							if (aip->ai_family == AF_INET6) {
 								// set socket to listen only IPv6
 								if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &opttrue, sizeof(opttrue)) == -1) {
-									perror("ServerUsage-Server (setsockopt : IPPROTO_IPV6 - IPV6_V6ONLY)");
+									perror("ServerUsage-Client (setsockopt : IPPROTO_IPV6 - IPV6_V6ONLY)");
 									continue;
 								}
 							}
 							// make socket reusable
 							if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opttrue, sizeof(opttrue)) == -1) {
-								perror("ServerUsage-Server (setsockopt : SOL_SOCKET - SO_REUSEADDR)");
+								perror("ServerUsage-Client (setsockopt : SOL_SOCKET - SO_REUSEADDR)");
 								continue;
 							}
 
