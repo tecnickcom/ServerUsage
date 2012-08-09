@@ -2,7 +2,7 @@
 //=============================================================================+
 // File name   : serverusage_tcpreceiver.c
 // Begin       : 2012-02-14
-// Last Update : 2012-08-08
+// Last Update : 2012-08-09
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -48,7 +48,7 @@
 
 // USAGE EXAMPLES:
 // ./serverusage_tcpreceiver.bin PORT MAX_CONNECTIONS "database"
-// ./serverusage_tcpreceiver.bin 9930 100 "/var/lib/serverusage/serverusage.db"
+// ./serverusage_tcpreceiver.bin "9930" 100 "/var/lib/serverusage/serverusage.db"
 
 // NOTE: For the SQLite table used to to store data, please consult the SQL file on this project.
 
@@ -61,7 +61,10 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netdb.h>
+#include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sqlite3.h>
 
 // DEBUG OPTION TO PRINT EXECUTION TIME
@@ -86,6 +89,11 @@
  * Max size of the SQL query.
  */
 #define QUERYLEN 1024
+
+/**
+ * Number of sockets (IPv4 + IPv6)
+ */
+#define MAXSOCK 2
 
 /**
  * SQLite database connection
@@ -319,12 +327,21 @@ int main(int argc, char *argv[]) {
 
 	// decode arguments
 	if (argc != 4) {
-		diep("This program listen on specified IP:PORT for incoming TCP messages from serverusage_tcpsender.bin, and store the data on a SQLite database memory table.\nYou must provide 3 arguments: port, max_conenctions, sqlite_database\nFOR EXAMPLE:\n./serverusage_tcpreceiver.bin 9930 100 \"/var/lib/serverusage/serverusage.db\"");
+		diep("This program listen on specified IP:PORT for incoming TCP messages from serverusage_tcpsender.bin, and store the data on a SQLite database memory table.\n\
+		You must provide 3 arguments: port, max_conenctions, sqlite_database\n\
+		FOR EXAMPLE:\n\
+		./serverusage_tcpreceiver.bin \"9930\" 100 \"/var/lib/serverusage/serverusage.db\"");
 	}
 
 	// set input values
-	int port = atoi(argv[1]);
+
+	// listening port
+	char *port = (char *)argv[1];
+
+	// maximum number of conenctions
 	int maxconn = atoi(argv[2]);
+
+	// SQLite database file name
 	char *database = (char *)argv[3];
 
 	// thread identifier
@@ -335,9 +352,6 @@ int main(int argc, char *argv[]) {
 
 	// true option for setsockopt
 	int opttrue = 1;
-	
-	// false option for setsockopt
-	//int optfalse = 0;
 
 	// thread number
 	int tn = 0;
@@ -345,6 +359,7 @@ int main(int argc, char *argv[]) {
 	// arguments be passes on thread
 	targs cargs[maxconn];
 
+	// string to store error messages
 	char *ErrMsg;
 
 	// connect to database
@@ -367,96 +382,198 @@ int main(int argc, char *argv[]) {
 		diep(sqlite3_errmsg(db));
 	}
 
-	// structure containing an Internet socket address: an address family (always AF_INET for our purposes), a port number, an IP address
-	// si_server defines the socket where the server will listen.
-	struct sockaddr_in6 si_server;
+	// file descriptor sets for the select function
+	fd_set mset, wset;
+
+	// initialize descriptor for select
+    FD_ZERO(&mset);
+
+	// structures to handle address information
+	struct addrinfo hints, *res, *aip;
 
 	// defines the socket at the other end of the link (that is, the client)
-	struct sockaddr_in6 si_client;
+	struct sockaddr_storage si_client;
 
 	// size of si_client
-	int slen = sizeof(si_client);
+	socklen_t slen = sizeof(si_client);
 
-	// socket
-	int s = -1;
+	// sockets array
+	int sockfd[MAXSOCK];
+
+	// max socket number
+	int maxsockfd = 0;
+
+	// socket number
+	int nsock=0;
+
+	// socket options
+	int opts=-1;
 
 	// new socket
 	int ns = -1;
 
-	// initialize the si_server structure filling it with binary zeros
-	memset((char *) &si_server, 0, slen);
+	// initialize structure
+	memset(&hints, 0, sizeof(hints));
 
-	// use internet address
-	si_server.sin6_family = AF_INET6;
+	// set parameters
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
 
-	// listen to any IP address
-	si_server.sin6_addr = in6addr_any;
-
-	// set the port to listen to, and ensure the correct byte order
-	si_server.sin6_port = htons(port);
-
-	// Create a network socket.
-	// AF_INET says that it will be an Internet socket.
-	// SOCK_STREAM Provides sequenced, reliable, two-way, connection-based byte streams.
-	if ((s = socket(si_server.sin6_family, SOCK_STREAM, 0)) == -1) {
-		diep("ServerUsage-Server (socket)");
+	// get address info
+	if (getaddrinfo(NULL, port, &hints, &res) != 0) {
+		diep("ServerUsage-Server (getaddrinfo)");
 	}
 
-	// set socket to listen on IPv6 and IPv4
-	if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &opttrue, sizeof(opttrue)) == -1) {
-		diep("ServerUsage-Server (setsockopt : IPPROTO_IPV6 - IPV6_V6ONLY)");
-	}
+	// for each socket type
+	for (aip = res; (aip && (nsock < MAXSOCK)); aip = aip->ai_next) {
 
-	// set SO_REUSEADDR on socket to true (1):
-	if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opttrue, sizeof(opttrue)) == -1) {
-		diep("ServerUsage-Server (setsockopt : SOL_SOCKET - SO_REUSEADDR)");
-	}
+		// try to create a network socket.
+		sockfd[nsock] = socket(aip->ai_family, aip->ai_socktype, aip->ai_protocol);
 
-	// bind the socket s to the address in si_server.
-	if (bind(s, (struct sockaddr *) &si_server, slen) == -1) {
-		diep("ServerUsage-Server (bind)");
+		if (sockfd[nsock] < 0) {
+			switch (errno) {
+				case EAFNOSUPPORT:
+				case EPROTONOSUPPORT: {
+					// skip the errors until the last address family
+					if (aip->ai_next) {
+						continue;
+					} else {
+						// handle unknown protocol errors
+						diep("ServerUsage-Server (socket)");
+						break;
+					}
+				}
+				default: {
+					// handle other socket errors
+					diep("ServerUsage-Server (socket)");
+					break;
+				}
+			}
+		} else {
+			if (aip->ai_family == AF_INET6) {
+				// set socket to listen only IPv6
+				if (setsockopt(sockfd[nsock], IPPROTO_IPV6, IPV6_V6ONLY, &opttrue, sizeof(opttrue)) == -1) {
+					perror("ServerUsage-Server (setsockopt : IPPROTO_IPV6 - IPV6_V6ONLY)");
+					continue;
+				}
+			}
+			// make socket reusable
+			if (setsockopt(sockfd[nsock], SOL_SOCKET, SO_REUSEADDR, &opttrue, sizeof(opttrue)) == -1) {
+				perror("ServerUsage-Server (setsockopt : SOL_SOCKET - SO_REUSEADDR)");
+				continue;
+			}
+			// make socket non-blocking
+			opts = fcntl(sockfd[nsock], F_GETFL);
+			if (opts < 0) {
+				perror("ServerUsage-Server (fcntl(F_GETFL))");
+				continue;
+			}
+			opts = (opts | O_NONBLOCK);
+			if (fcntl(sockfd[nsock], F_SETFL, opts) < 0) {
+				perror("ServerUsage-Server (fcntl(F_SETFL))");
+				continue;
+			}
+			// bind the socket to the address
+			if (bind(sockfd[nsock], aip->ai_addr, aip->ai_addrlen) < 0) {
+				close(sockfd[nsock]);
+				continue;
+			}
+			// listen for incoming connections on each stack
+			if (listen(sockfd[nsock], maxconn) < 0) {
+				close(sockfd[nsock]);
+				continue;
+			} else {
+				// set select for this socket
+				FD_SET(sockfd[nsock], &mset);
+				if (sockfd[nsock] > maxsockfd) {
+					// set the maximum socket number
+					maxsockfd = sockfd[nsock];
+				}
+			}
+		}
+		// move to next socket
+		nsock++;
 	}
-
-	// listen for connections
-	listen(s, maxconn);
+	// free resource
+	freeaddrinfo(res);
 
 	// initialize mutex semaphore
 	sem_init(&mutex, 0, 1);
 
 	// forever
-	while (1)  {
+	while (1) {
 
-		// accept a connection on a socket
-		if ((ns = accept(s, (struct sockaddr *) &si_client, &slen)) == -1) {
-			// print an error message
-			perror("ServerUsage-Server (accept)");
-			// retry after 1 second
-			sleep(1);
-		} else {
+		// copy master sd_set to the working sd_set
+		memcpy(&wset, &mset, sizeof(mset));
 
-			// prepare data for the thread
-			cargs[tn].socket_conn = ns;
-			memset(cargs[tn].clientip, 0, INET6_ADDRSTRLEN);
-			inet_ntop(si_server.sin6_family, &si_client.sin6_addr, cargs[tn].clientip, INET6_ADDRSTRLEN);
-			cargs[tn].clientport = ntohs(si_client.sin6_port);
-
-			// handle each connection on a separate thread
-			pthread_attr_init(&tattr);
-			pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
-			pthread_create(&tid, &tattr, connection_thread, (void *)&cargs[tn]);
-
-			tn++;
-
-			if (tn >= maxconn) {
-				// reset connection number
-				tn = 0;
+		// call select() to wait for connection from all defined sockets
+		if (select((maxsockfd + 1), &wset, NULL, NULL, NULL) < 0) {
+			if (errno == EINTR) {
+				// ignore this error and go back
+				continue;
 			}
+			diep("ServerUsage-Server (select)");
 		}
 
-	} // end of for loop
+		// or each socket
+		for (nsock = 0; nsock < MAXSOCK; nsock++) {
+			// if we have a connection on the socket
+			if (FD_ISSET(sockfd[nsock], &wset)) {
 
-	// close socket
-	close(s);
+				// accept a connection on a socket
+				if ((ns = accept(sockfd[nsock], (struct sockaddr *) &si_client, &slen)) == -1) {
+					// print an error message
+					perror("ServerUsage-Server (accept)");
+					continue;
+				} else {
+					// make socket blocking
+					opts = fcntl(sockfd[nsock], F_GETFL);
+					if (opts < 0) {
+						perror("ServerUsage-Server (accept() > fcntl(F_GETFL))");
+						continue;
+					}
+					opts = (opts & (~O_NONBLOCK));
+					if (fcntl(sockfd[nsock], F_SETFL, opts) < 0) {
+						perror("ServerUsage-Server (accept() > fcntl(F_SETFL))");
+						continue;
+					}
+
+					// prepare data for the thread
+					cargs[tn].socket_conn = ns;
+					memset(cargs[tn].clientip, 0, INET6_ADDRSTRLEN);
+
+					if (((struct sockaddr *)&si_client)->sa_family == AF_INET) {
+						// IPv4 mode
+						inet_ntop(si_client.ss_family, &((struct sockaddr_in*)&si_client)->sin_addr, cargs[tn].clientip, INET6_ADDRSTRLEN);
+						cargs[tn].clientport = ntohs(((struct sockaddr_in*)&si_client)->sin_port);
+					} else {
+						// IPv6 mode
+						inet_ntop(si_client.ss_family, &((struct sockaddr_in6*)&si_client)->sin6_addr, cargs[tn].clientip, INET6_ADDRSTRLEN);
+						cargs[tn].clientport = ntohs(((struct sockaddr_in6*)&si_client)->sin6_port);
+					}
+
+					// handle each connection on a separate thread
+					pthread_attr_init(&tattr);
+					pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
+					pthread_create(&tid, &tattr, connection_thread, (void *)&cargs[tn]);
+
+					// increase thread number
+					tn++;
+
+					if (tn >= maxconn) {
+						// reset connection number
+						tn = 0;
+					}
+				}
+			}
+		}
+	} // end of while loop
+
+	// close connections
+	for (nsock = 0; nsock < MAXSOCK; nsock++) {
+		close(sockfd[nsock]);
+	}
 
 	// terminate statement
 	sqlite3_finalize(stmt);

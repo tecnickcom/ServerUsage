@@ -2,8 +2,8 @@
 //=============================================================================+
 // File name   : serverusage_tcpsender.c
 // Begin       : 2012-02-28
-// Last Update : 2012-08-08
-// Version     : 5.3.0
+// Last Update : 2012-08-09
+// Version     : 6.0.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -47,7 +47,7 @@
 // gcc -O3 -g -pipe -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -fno-strict-aliasing -fwrapv -fPIC --param=ssp-buffer-size=4 -D_GNU_SOURCE -o serverusage_tcpsender.bin serverusage_tcpsender.c
 
 // USAGE EXAMPLE:
-// staprun -b 1024 serverusage_client.ko smp=60 srvid="host001" | ./serverusage_tcpsender.bin "127.0.0.1" 9930 "/var/log/serverusage_cache.log"
+// staprun -b 1024 serverusage_client.ko smp=60 srvid="host001" | ./serverusage_tcpsender.bin "127.0.0.1" "9930" "/var/log/serverusage_cache.log"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -56,6 +56,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netdb.h>
+#include <errno.h>
 #include <unistd.h>
 
 /**
@@ -94,7 +96,10 @@ int main(int argc, char *argv[]) {
 
 	// decode arguments
 	if (argc != 4) {
-		perror("This program accept a text as input from serverusage_client.ko module and sends data via TCP to the specified IP:PORT.\nYou must provide 3 arguments: ip_address, port, local_cache_file\nFOR EXAMPLE:\n./serverusage_tcpsender.bin \"127.0.0.1\" 9930 \"/var/log/serverusage_cache.log\"");
+		perror("This program accept a text as input from serverusage_client.ko module and sends data via TCP to the specified IP:PORT.\n\
+		You must provide 3 arguments: ip_address, port, local_cache_file\n\
+		FOR EXAMPLE:\n\
+		./serverusage_tcpsender.bin \"127.0.0.1\" \"9930\" \"/var/log/serverusage_cache.log\"");
 		exit(1);
 	}
 
@@ -104,7 +109,7 @@ int main(int argc, char *argv[]) {
 	char *ipaddress = (char *)argv[1];
 
 	// the TCP	port of the listening remote log server
-	int port = atoi(argv[2]);
+	char *port = (char *)argv[2];
 
 	// the local cache file to temporarily store the logs when the TCP connection is not available
 	char *cachelog = (char *)argv[3];
@@ -144,27 +149,22 @@ int main(int argc, char *argv[]) {
 
 	// true option for setsockopt
 	int opttrue = 1;
-	
-	// false option for setsockopt
-	//int optfalse = 0;
 
-	// structure containing an Internet socket address for server
-	struct sockaddr_in6 si_server;
+	// structures to handle address information
+	struct addrinfo hints, *res, *aip;
 
-	// size of si_server
-	int slen = sizeof(si_server);
+	// initialize structure
+	memset(&hints, 0, sizeof(hints));
 
-	// initialize the si_server structure filling it with binary zeros
-	memset((char *) &si_server, 0, slen);
+	// set parameters
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
 
-	// use IPv6 internet address
-	si_server.sin6_family = AF_INET6;
-
-	// set the IP address we want to bind to.
-	inet_pton(si_server.sin6_family, ipaddress, &(si_server.sin6_addr));
-
-	// set the port to listen to, and ensure the correct byte order
-	si_server.sin6_port = htons(port);
+	// get address info
+	if (getaddrinfo(ipaddress, port, &hints, &res) != 0) {
+		perror("ServerUsage-Client (getaddrinfo)");
+		exit(1);
+	}
 
 	// check if the program is in loop mode
 	int loopcontrol = 0;
@@ -259,30 +259,53 @@ int main(int argc, char *argv[]) {
 						s = -1;
 					}
 
-					// start of block of data : create a network socket.
-					// AF_INET says that it will be an Internet socket.
-					// SOCK_STREAM Provides sequenced, reliable, two-way, connection-based byte streams.
-					if ((s = socket(si_server.sin6_family, SOCK_STREAM, 0)) == -1) {
-						// print an error message
-						perror("ServerUsage-Client (socket)");
-					} else {
+					// for each socket type
+					for (aip = res; aip; aip = aip->ai_next) {
 
-						// set socket to listen on IPv6 and IPv4
-						if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &opttrue, sizeof(opttrue)) == -1) {
-							perror("ServerUsage-Client (setsockopt : IPPROTO_IPV6 - IPV6_V6ONLY)");
-						}
+						// try to create a network socket.
+						s = socket(aip->ai_family, aip->ai_socktype, aip->ai_protocol);
 
-						// set SO_REUSEADDR on socket to true (1):
-						if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opttrue, sizeof(opttrue)) == -1) {
-							perror("ServerUsage-Client (setsockopt : SOL_SOCKET - SO_REUSEADDR)");
-						}
+						if (s < 0) {
+							switch (errno) {
+								case EAFNOSUPPORT:
+								case EPROTONOSUPPORT: {
+									// skip the errors until the last address family
+									if (aip->ai_next) {
+										continue;
+									} else {
+										// handle unknown protocol errors
+										perror("ServerUsage-Server (socket)");
+										break;
+									}
+								}
+								default: {
+									// handle other socket errors
+									perror("ServerUsage-Server (socket)");
+									break;
+								}
+							}
+						} else {
 
-						// establish a connection to the server
-						if (connect(s, &si_server, slen) == -1) {
-							close(s);
-							s = -1;
-							// print an error message
-							perror("ServerUsage-Client (connect)");
+							if (aip->ai_family == AF_INET6) {
+								// set socket to listen only IPv6
+								if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &opttrue, sizeof(opttrue)) == -1) {
+									perror("ServerUsage-Server (setsockopt : IPPROTO_IPV6 - IPV6_V6ONLY)");
+									continue;
+								}
+							}
+							// make socket reusable
+							if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opttrue, sizeof(opttrue)) == -1) {
+								perror("ServerUsage-Server (setsockopt : SOL_SOCKET - SO_REUSEADDR)");
+								continue;
+							}
+
+							// establish a connection to the server
+							if (connect(s, aip->ai_addr, aip->ai_addrlen) == -1) {
+								close(s);
+								s = -1;
+								// print an error message
+								perror("ServerUsage-Client (connect)");
+							}
 						}
 					}
 

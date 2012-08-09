@@ -3,9 +3,9 @@ ServerUsage - README
 
 + Name: ServerUsage
 
-+ Version: 5.3.0
++ Version: 6.0.0
 
-+ Release date: 2012-08-08
++ Release date: 2012-08-09
 
 + Author: Nicola Asuni
 
@@ -93,6 +93,13 @@ The following packages are required to create ServerUsage RPMs:
 
 	# yum install kernel-devel elfutils-devel sqlite-devel.x86_64 sqlite.x86_64
 
+Install debug packages (change repository if you are not using CentOS):
+
+	wget http://debuginfo.centos.org/6/$(uname -m)/kernel-debug-debuginfo-$(uname -r).rpm
+	wget http://debuginfo.centos.org/6/$(uname -m)/kernel-debuginfo-$(uname -r).rpm
+	wget http://debuginfo.centos.org/6/$(uname -m)/kernel-debuginfo-common-$(uname -m)-$(uname -r).rpm
+	rpm -U --force kernel-debug-debuginfo-$(uname -r).rpm kernel-debuginfo-$(uname -r).rpm kernel-debuginfo-common-$(uname -m)-$(uname -r).rpm
+
 Install SystemTap:
 
 	# yum -y install systemtap systemtap-client systemtap-devel systemtap-runtime systemtap-initscript systemtap-grapher systemtap-sdt-devel systemtap-server systemtap-testsuite
@@ -146,7 +153,7 @@ The ServerUsage-Server RPM must be installed only on the Log Server (the compute
 
 As root install the ServerUsage-Server RPM file:
 
-	# rpm -i serverusage_server-5.3.0-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_server-6.0.0-1.el6.$(uname -m).rpm
 	
 Once the RPM is installed you can configure the ServerUsage-Server editing the following file:
 
@@ -175,7 +182,7 @@ The ServerUsage-Client RPM must be installed on each client computer to monitor.
 As root install the SystemTap-Runtime and ServerUsage-Client RPM files:
 
 	# rpm -i systemtap-runtime-1.7-1.el6.$(uname -m).rpm 
-	# rpm -i serverusage_client-5.3.0-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_client-6.0.0-1.el6.$(uname -m).rpm
 
 Configure the ServerUsage-Client
 

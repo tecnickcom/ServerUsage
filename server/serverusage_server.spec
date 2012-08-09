@@ -1,7 +1,7 @@
 %define release 1
 
 Name:           serverusage_server
-Version:        5.3.0
+Version:        6.0.0
 Release:        %{release}%{?dist}
 Summary:        ServerUsage-Server collects logs data via TCP from ServerUsage-Client
 
@@ -12,7 +12,7 @@ Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  sqlite-devel > 3.6.0, elfutils-devel
-Requires:       httpd >= 2.0.0, sqlite >= 3.6.0, php >= 5.3.0, php-common >= 5.3.0, php-pdo >= 5.3.0, crontabs
+Requires:       httpd >= 2.0.0, sqlite >= 3.6.0, php >= 6.0.0, php-common >= 6.0.0, php-pdo >= 6.0.0, crontabs
 
 %description
 The ServerUsage-Server is a program to collect and process log data sent by
