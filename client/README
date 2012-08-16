@@ -3,9 +3,9 @@ ServerUsage-Client - README
 
 Name: ServerUsage-Client
 
-Version: 6.0.0
+Version: 6.1.0
 
-Release date: 2012-08-09
+Release date: 2012-08-15
 
 Author: Nicola Asuni (nicola@fubra.com)
 
@@ -136,8 +136,7 @@ REQUIRED PACKAGES TO COMPILE THE SOURCES:
 
 	The following packages are required to compile the sources:
 
-		* systemtap 1.7+ (get the latest version from
-			<http://sourceware.org/systemtap/ftp/releases/>)
+		* systemtap 1.7+
 		* kernel-devel
 		* kernel-debug-debuginfo-*
 		* kernel-debuginfo-*
@@ -150,33 +149,17 @@ REQUIRED PACKAGES TO COMPILE THE SOURCES:
 
 	yum groupinstall 'Development Tools'
 	yum install kernel-devel elfutils-devel
+	
+	Install debug packages (change repository if you are not using CentOS):
 
-	# for CentOS 6:
-		wget http://debuginfo.centos.org/6/x86_64/kernel-debug-debuginfo-$(uname -r).rpm
-		wget http://debuginfo.centos.org/6/x86_64/kernel-debuginfo-$(uname -r).rpm
-		wget http://debuginfo.centos.org/6/x86_64/kernel-debuginfo-common-x86_64-$(uname -r).rpm
-
-	# for Scientific Linux 6:
-		wget http://ftp1.scientificlinux.org/linux/scientific/6rolling/archive/debuginfo/kernel-debug-debuginfo-$(uname -r).rpm
-		wget http://ftp1.scientificlinux.org/linux/scientific/6rolling/archive/debuginfo/kernel-debuginfo-$(uname -r).rpm
-		wget http://ftp1.scientificlinux.org/linux/scientific/6rolling/archive/debuginfo/kernel-debuginfo-common-x86_64-$(uname -r).rpm
-
-	yum install kernel-debug-debuginfo-$(uname -r).rpm kernel-debuginfo-$(uname -r).rpm kernel-debuginfo-common-x86_64-$(uname -r).rpm
+		wget http://debuginfo.centos.org/6/$(uname -m)/kernel-debug-debuginfo-$(uname -r).rpm
+		wget http://debuginfo.centos.org/6/$(uname -m)/kernel-debuginfo-$(uname -r).rpm
+		wget http://debuginfo.centos.org/6/$(uname -m)/kernel-debuginfo-common-$(uname -m)-$(uname -r).rpm
+		rpm -U --force kernel-debug-debuginfo-$(uname -r).rpm kernel-debuginfo-$(uname -r).rpm kernel-debuginfo-common-$(uname -m)-$(uname -r).rpm
 
 	yum install sqlite-devel crash-devel rpm-devel nss-devel avahi-devel latex2html xmlto xmlto-tex publican publican-fedora gtkmm24-devel libglademm24-devel boost-devel
 
-
-	wget http://sourceware.org/systemtap/ftp/releases/systemtap-1.7.tar.gz
-
-	tar -xvf systemtap-1.7.tar.gz
-	cd systemtap-1.7
-	./configure
-	make all
-	make install
-
-	sytemtap will be installed in /usr/local
-
-	On the production machines we have to install just the systemtap-runtime 1.7
+	On the production machines we have to install just the systemtap-runtime
 
 COMPILE AND INSTALL
 -------------------
@@ -200,11 +183,12 @@ CONFIGURE
 RUN
 ---
 
-	To start this program you can use the SysV init script:
+	To start the ServerUsage-Client module you can use the SysV init script:
 
 	/etc/init.d/serverusage_client
 
-	To startup the service at boot you can use the chkconfig or update-rc.d
-	command (depending by OS type).
+	To startup the service at boot you can use the chkconfig:
+		chkconfig serverusage_client on
+	or update-rc.d command (depending by OS type).
 
 ================================================================================

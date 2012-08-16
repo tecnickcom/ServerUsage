@@ -3,7 +3,7 @@
 # File name   : makefile
 # Begin       : 2012-04-16
 # Last Update : 2012-05-22
-# Version     : 6.0.0
+# Version     : 6.1.0
 #
 # Website     : https://github.com/fubralimited/ServerUsage
 #
@@ -87,6 +87,8 @@ install:
 
 # REMOVE ALL INSTALLED FILES
 uninstall:
+	$(PATHINIT)serverusage_server stop
+	chkconfig serverusage_server off
 	rm -f $(PATHWEB)serverusage_svg.html
 	rm -f $(PATHWEB)serverusage_api.php
 	rmdir $(PATHWEB)

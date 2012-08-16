@@ -3,9 +3,9 @@ ServerUsage - README
 
 + Name: ServerUsage
 
-+ Version: 6.0.0
++ Version: 6.1.0
 
-+ Release date: 2012-08-09
++ Release date: 2012-08-16
 
 + Author: Nicola Asuni
 
@@ -39,12 +39,7 @@ DESCRIPTION:
 The ServerUsage system is designed to collect and process statistic information from computers
 running a GNU-Linux Operating System.
 
-This project is composed by 2 sub-projects:
-
-
-## ServerUsage-Client ##
-
-The ServerUsage-Client program is composed by two main sections: the SystemTap (http://sourceware.org/systemtap) serverusage_client.ko kernel module to collect and output usage statistics of the machine where it is installed, and the serverusage_tcpsender.bin to send the output to a log server via TCP.
+This project is composed by:
 
 
 ## ServerUsage-Server ##
@@ -53,6 +48,17 @@ The ServerUsage-Server program listen on a TCP port for incoming log data (from 
 
 The serverusage_api.php script can be remotely used to extract formatted data 
 from the database or display graphs.
+
+
+## ServerUsage-Client ##
+
+The ServerUsage-Client program is composed by two main sections: the SystemTap (http://sourceware.org/systemtap) serverusage_client.ko kernel module to collect and output usage statistics of the machine where it is installed, and the serverusage_tcpsender.bin to send the output to a log server via TCP.
+
+
+## ServerUsage-Client-MDB ##
+
+The ServerUsage-Client-MDB program is used to collect user statistics form a MariaDB database.
+
 
 
 ## GENERAL USAGE SCHEMA ##
@@ -91,7 +97,7 @@ Install development tools and Fedora packager:
 
 The following packages are required to create ServerUsage RPMs:
 
-	# yum install kernel-devel elfutils-devel sqlite-devel.x86_64 sqlite.x86_64
+	# yum install kernel-devel elfutils-devel sqlite-devel.x86_64 sqlite.x86_64 MariaDB-devel
 
 Install debug packages (change repository if you are not using CentOS):
 
@@ -128,19 +134,24 @@ Copy the SPEC files and source files to rpmbuild dir:
 	$ cd ~/ServerUsage
 	$ export SUVER=$(cat VERSION) 
 	
-	$ cd ~/ServerUsage/client
-	$ cp serverusage_client.spec ~/rpmbuild/SPECS/
-	$ tar -zcvf ~/rpmbuild/SOURCES/serverusage_client-$SUVER.tar.gz  *
-	
 	$ cd ~/ServerUsage/server
 	$ cp serverusage_server.spec ~/rpmbuild/SPECS/
-	$ tar -zcvf ~/rpmbuild/SOURCES/serverusage_server-$SUVER.tar.gz  *
+	$ tar -zcvf ~/rpmbuild/SOURCES/serverusage_server-$SUVER.tar.gz  *  
+	
+	$ cd ~/ServerUsage/client
+	$ cp serverusage_client.spec ~/rpmbuild/SPECS/
+	$ tar -zcvf ~/rpmbuild/SOURCES/serverusage_client-$SUVER.tar.gz  *  
+	
+	$ cd ~/ServerUsage/client_mdb
+	$ cp serverusage_client_mdb.spec ~/rpmbuild/SPECS/
+	$ tar -zcvf ~/rpmbuild/SOURCES/serverusage_client_mdb-$SUVER.tar.gz  *    
 
 Create the RPMs:
 
 	$ cd ~/rpmbuild/SPECS/
-	$ rpmbuild -ba serverusage_client.spec
-	$ rpmbuild -ba serverusage_server.spec
+	$ rpmbuild -ba serverusage_server.spec  
+	$ rpmbuild -ba serverusage_client.spec  
+	$ rpmbuild -ba serverusage_client_mdb.spec  
 
 
 The RPMs are now located at ~/rpmbuild/RPMS/$(uname -m)
@@ -153,7 +164,7 @@ The ServerUsage-Server RPM must be installed only on the Log Server (the compute
 
 As root install the ServerUsage-Server RPM file:
 
-	# rpm -i serverusage_server-6.0.0-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_server-6.1.0-1.el6.$(uname -m).rpm
 	
 Once the RPM is installed you can configure the ServerUsage-Server editing the following file:
 
@@ -182,7 +193,7 @@ The ServerUsage-Client RPM must be installed on each client computer to monitor.
 As root install the SystemTap-Runtime and ServerUsage-Client RPM files:
 
 	# rpm -i systemtap-runtime-1.7-1.el6.$(uname -m).rpm 
-	# rpm -i serverusage_client-6.0.0-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_client-6.1.0-1.el6.$(uname -m).rpm
 
 Configure the ServerUsage-Client
 
@@ -200,3 +211,26 @@ To start the service at boot you can use the following command:
 
 	# chkconfig serverusage_client on
 
+
+Install ServerUsage-Client-MDB
+------------------------------
+
+The ServerUsage-Client RPM must be installed on the computer containing the MariaDB database.
+
+As root install the ServerUsage-Client RPM file:
+
+	# rpm -i serverusage_client_mdb-6.1.0-1.el6.$(uname -m).rpm
+
+Configure the ServerUsage-Client
+
+	# nano /etc/serverusage_client_mdb.conf 
+
+Set the IP address of the Log server where ServerUsage-Server is installed and be sure that the specified TCP port is open on both client and server.
+
+The ServerUsage-Client includes a SysV init script to start/stop/restart the service:
+
+	# /etc/init.d/serverusage_client_mdb start|stop|restart
+
+To start the service at boot you can use the following command:
+
+	# chkconfig serverusage_client_mdb on

@@ -2,7 +2,7 @@
 //=============================================================================+
 // File name   : serverusage_tcpreceiver.c
 // Begin       : 2012-02-14
-// Last Update : 2012-08-09
+// Last Update : 2012-08-16
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -48,7 +48,7 @@
 
 // USAGE EXAMPLES:
 // ./serverusage_tcpreceiver.bin PORT MAX_CONNECTIONS "database"
-// ./serverusage_tcpreceiver.bin "9930" 100 "/var/lib/serverusage/serverusage.db"
+// ./serverusage_tcpreceiver.bin 9930 100 "/var/lib/serverusage/serverusage.db"
 
 // NOTE: For the SQLite table used to to store data, please consult the SQL file on this project.
 
@@ -330,7 +330,7 @@ int main(int argc, char *argv[]) {
 		diep("This program listen on specified IP:PORT for incoming TCP messages from serverusage_tcpsender.bin, and store the data on a SQLite database memory table.\n\
 		You must provide 3 arguments: port, max_conenctions, sqlite_database\n\
 		FOR EXAMPLE:\n\
-		./serverusage_tcpreceiver.bin \"9930\" 100 \"/var/lib/serverusage/serverusage.db\"");
+		./serverusage_tcpreceiver.bin 9930 100 \"/var/lib/serverusage/serverusage.db\"");
 	}
 
 	// set input values
@@ -543,14 +543,14 @@ int main(int argc, char *argv[]) {
 					cargs[tn].socket_conn = ns;
 					memset(cargs[tn].clientip, 0, INET6_ADDRSTRLEN);
 
-					if (((struct sockaddr *)&si_client)->sa_family == AF_INET) {
-						// IPv4 mode
-						inet_ntop(si_client.ss_family, &((struct sockaddr_in*)&si_client)->sin_addr, cargs[tn].clientip, INET6_ADDRSTRLEN);
-						cargs[tn].clientport = ntohs(((struct sockaddr_in*)&si_client)->sin_port);
-					} else {
+					if ((&si_client)->ss_family == AF_INET6) {
 						// IPv6 mode
 						inet_ntop(si_client.ss_family, &((struct sockaddr_in6*)&si_client)->sin6_addr, cargs[tn].clientip, INET6_ADDRSTRLEN);
 						cargs[tn].clientport = ntohs(((struct sockaddr_in6*)&si_client)->sin6_port);
+					} else {
+						// IPv4 mode
+						inet_ntop(si_client.ss_family, &((struct sockaddr_in*)&si_client)->sin_addr, cargs[tn].clientip, INET6_ADDRSTRLEN);
+						cargs[tn].clientport = ntohs(((struct sockaddr_in*)&si_client)->sin_port);
 					}
 
 					// handle each connection on a separate thread
