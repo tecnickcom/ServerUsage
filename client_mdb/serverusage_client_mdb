@@ -1,0 +1,122 @@
+#!/bin/bash
+#
+#chkconfig: 235 99 01
+#description: Starts and stops ServerUsage-Client
+
+#==============================================================================+
+# File name   : serverusage_client
+# Begin       : 2012-04-12
+# Last Update : 2012-08-15
+# Version     : 6.1.0
+#
+# Description : Init script to execute ServerUsage-Client-MDB.
+#
+# Website     : https://github.com/fubralimited/ServerUsage
+#
+# Author: Nicola Asuni
+#
+# (c) Copyright:
+#               Fubra Limited
+#               Manor Coach House
+#               Church Hill
+#               Aldershot
+#               Hampshire
+#               GU12 4RQ
+#               UK
+#               http://www.fubra.com
+#               support@fubra.com
+#
+# License:
+#    Copyright (C) 2012-2012 Fubra Limited
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as
+#    published by the Free Software Foundation, either version 3 of the
+#    License, or (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#    See LICENSE.TXT file for more information.
+#==============================================================================+
+
+# configuration file
+CONFIG_FILE="/etc/serverusage_client_mdb.conf"
+
+# load parameters from configuration file
+if [ -f $CONFIG_FILE ] ; then
+	. $CONFIG_FILE
+fi
+
+# check empty server ID
+if [ -z "$SERVER_ID" ] ; then
+	# set hostname
+	SERVER_ID=`hostname`
+fi
+
+# command to execute
+CMDMDB="$PATH_MDBCLIENT $LOGSERVER_IP $LOGSERVER_PORT $DATABASE_HOST $DATABASE_PORT $DATABASE_USER $DATABASE_PASSWORD $SAMPLING_TIME $SERVER_ID $PATH_TCPSENDER $PATH_TEMPLOG"
+
+# get SystemV Init function library.
+if [ -f /etc/init.d/functions ] ; then
+	. /etc/init.d/functions
+elif [ -f /etc/rc.d/init.d/functions ] ; then
+	. /etc/rc.d/init.d/functions
+else
+	exit 1
+fi
+
+# Start the service
+start() {
+	if test -f /var/lock/subsys/serverusage_client_mdb ; then
+		echo -n $"Service is Already Running."
+		echo
+		return
+	fi
+	echo -n $"Starting ServerUsage-Client-MDB: "
+	($CMDMDB)&
+	# create the lock file
+	touch /var/lock/subsys/serverusage_client_mdb
+	success $"ServerUsage-Client-MDB startup"
+	echo
+}
+
+# Restart the service
+stop() {
+	echo -n $"Stopping ServerUsage-Client-MDB: "
+	killproc $PATH_MDBCLIENT
+	# delete the lock file
+	rm -f /var/lock/subsys/serverusage_client_mdb
+	echo
+}
+
+### main logic ###
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status $PATH_MDBCLIENT
+		;;
+	restart|reload|condrestart)
+		stop
+		start
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|restart|reload|status}"
+		exit 1
+esac
+
+exit 0
+
+#==============================================================================+
+# END OF FILE
+#==============================================================================+

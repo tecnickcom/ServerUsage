@@ -1,0 +1,43 @@
+.\" Manpage for ServerUsage-Client-MDB.
+.TH serverusage_client_mdb 8 "2012-08-16"
+.SH NAME
+serverusage_client_mdb \- ServerUsage-Client-MDB control interface
+.SH SYNOPSIS
+serverusage_client_mdb is a SysV init script that takes one-word commands, defined below:
+.PP
+.B serverusage_client_mdb
+.I command
+.PP
+.SH DESCRIPTION
+.B serverusage_client_mdb
+is a front end to the ServerUsage-Client_MDB program.
+The ServerUsage-Client program is composed by two main sections: the
+serverusage_client_mdb.bin to collect usage statistics from the database and the
+serverusage_tcpsender_mdb.bin to send the output to a log server via TCP.
+.PP
+.B NOTE:
+The configuration file is located at
+.B /etc/serverusage_client_mdb.conf
+.PP
+.SH OPTIONS
+The \fIcommand\fP can be any one of the following options:
+.TP 14
+.BI start
+Start ServerUsage-Client-MDB.
+.TP
+.BI stop
+Stops ServerUsage-Client-MDB.
+.TP
+.BI restart
+Restarts ServerUsage-Client-MDB.
+If the program is not running, it is started.
+.BI status
+Displays a brief status report.
+.BI help
+Displays a short help message.
+.SH AUTHOR
+Nicola Asuni (nicola@fubra.com)
+.SH COPYRIGHT
+(c) 2012-2012 Fubra Limited
+Manor Coach House, Church Hill, Aldershot, Hampshire, GU12 4RQ, UK (http://www.fubra.com - support@fubra.com)
+.
