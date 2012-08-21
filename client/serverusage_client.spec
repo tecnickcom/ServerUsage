@@ -1,7 +1,7 @@
 %define release 1
 
 Name:           serverusage_client
-Version:        6.1.0
+Version:        6.2.0
 Release:        %{release}%{?dist}
 Summary:        ServerUsage-Client collects server usage statistics and send them to a remote log server via TCP
 
@@ -13,6 +13,10 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  kernel-devel, elfutils-devel, kernel-debug-debuginfo, kernel-debuginfo, kernel-debuginfo-common-x86_64
 Requires:       systemtap-runtime >= 1.7
+
+Requires(preun): chkconfig
+Requires(preun): initscripts
+Requires(postun): initscripts
 
 %description
 ServerUsage-Client is a tool to collect system statistics and send them to a
@@ -39,11 +43,28 @@ make clean
 %doc README LICENSE
 %{_bindir}/serverusage_client.ko
 %{_bindir}/serverusage_tcpsender.bin
-%{_sysconfdir}/serverusage_client.conf
+%config(noreplace) %{_sysconfdir}/serverusage_client.conf
 %{_initrddir}/serverusage_client
 %{_mandir}/man8/serverusage_client.8.gz
 
+%preun
+if [ $1 -eq 0 ] ; then
+	# uninstall: stop service
+	/sbin/service serverusage_client stop >/dev/null 2>&1
+	/sbin/chkconfig --del serverusage_client
+fi
+
+%postun
+if [ $1 -eq 1 ] ; then
+	# upgrade: restart service if was running
+	/sbin/service serverusage_client condrestart >/dev/null 2>&1 || :
+fi
+
 %changelog
+* Thu Aug 21 2012 Nicola Asuni
+- Added %config(noreplace)
+- Added preun and postun sections
+
 * Thu May 15 2012 Nicola Asuni
 - Rebuild to sync with the new server version.
 

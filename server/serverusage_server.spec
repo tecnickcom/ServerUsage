@@ -1,7 +1,7 @@
 %define release 1
 
 Name:           serverusage_server
-Version:        6.1.0
+Version:        6.2.0
 Release:        %{release}%{?dist}
 Summary:        ServerUsage-Server collects logs data via TCP from ServerUsage-Client
 
@@ -13,6 +13,10 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  sqlite-devel > 3.6.0, elfutils-devel
 Requires:       httpd >= 2.0.0, sqlite >= 3.6.0, php >= 5.3.0, php-common >= 5.3.0, php-pdo >= 5.3.0, crontabs
+
+Requires(preun): chkconfig
+Requires(preun): initscripts
+Requires(postun): initscripts
 
 %description
 The ServerUsage-Server is a program to collect and process log data sent by
@@ -40,15 +44,32 @@ make clean
 %doc README LICENSE
 %{_bindir}/serverusage_tcpreceiver.bin
 %{_bindir}/serverusage_dbagg.sh
-%{_sysconfdir}/serverusage_server.conf
+%config(noreplace) %{_sysconfdir}/serverusage_server.conf
 %{_initrddir}/serverusage_server
 %{_mandir}/man8/serverusage_server.8.gz
 %{_datadir}/serverusage/serverusage_database.sql
-%{_sharedstatedir}/serverusage/serverusage.db
+%config(noreplace) %{_sharedstatedir}/serverusage/serverusage.db
 /var/www/serverusage/serverusage_api.php
 /var/www/serverusage/serverusage_svg.html
 
+%preun
+if [ $1 -eq 0 ] ; then
+	# uninstall: stop service
+	/sbin/service serverusage_server stop >/dev/null 2>&1
+	/sbin/chkconfig --del serverusage_server
+fi
+
+%postun
+if [ $1 -eq 1 ] ; then
+	# upgrade: restart service if was running
+	/sbin/service serverusage_server condrestart >/dev/null 2>&1 || :
+fi
+
 %changelog
+* Thu Aug 21 2012 Nicola Asuni
+- Added %config(noreplace)
+- Added preun and postun sections
+
 * Thu Jul 17 2012 Nicola Asuni
 - Added dependency for crontabs.
 

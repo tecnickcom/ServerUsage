@@ -6,8 +6,8 @@
 #==============================================================================+
 # File name   : serverusage_client
 # Begin       : 2012-04-12
-# Last Update : 2012-05-11
-# Version     : 6.1.0
+# Last Update : 2012-08-21
+# Version     : 6.2.0
 #
 # Description : Init script to execute ServerUsage-Client.
 #
@@ -75,9 +75,15 @@ fi
 # Start the service
 start() {
 	if test -f /var/lock/subsys/serverusage_client ; then
-		echo -n $"Service is Already Running."
-		echo
-		return
+		# check if the process is running
+		if [ ! -z "`ps ax | grep -v grep | grep $PATH_STAPIO`" ] && [ ! -z "`ps ax | grep -v grep | grep $PATH_TCPSENDER`" ]; then
+			echo -n $"Service is Already Running."
+			echo
+			return
+		else
+			# delete the orphan processes and lock file
+			stop
+		fi
 	fi
 	echo -n $"Starting ServerUsage-Client: "
 	($CMDSTAP | $CMDTCPS)&
@@ -90,8 +96,17 @@ start() {
 # Restart the service
 stop() {
 	echo -n $"Stopping ServerUsage-Client: "
-	killproc $PATH_TCPSENDER
-	killproc $PATH_STAPIO
+	# check if the process is running
+	if [ ! -z "`ps ax | grep -v grep | grep $PATH_STAPIO`" ]; then
+		# kill the process
+		killproc $PATH_STAPIO
+	else
+		failure $"ServerUsage-Client stop"
+	fi
+	if [ ! -z "`ps ax | grep -v grep | grep $PATH_TCPSENDER`" ]; then
+		# kill the process
+		killproc $PATH_TCPSENDER
+	fi
 	# delete the lock file
 	rm -f /var/lock/subsys/serverusage_client
 	echo
@@ -109,12 +124,18 @@ case "$1" in
 		status $PATH_STAPIO
 		status $PATH_TCPSENDER
 		;;
-	restart|reload|condrestart)
+	restart|reload)
 		stop
 		start
 		;;
+	condrestart)
+		if test -f /var/lock/subsys/serverusage_client ; then
+			stop
+			start
+		fi
+		;;
 	*)
-		echo $"Usage: $0 {start|stop|restart|reload|status}"
+		echo $"Usage: $0 {start|stop|status|restart|reload|condrestart}"
 		exit 1
 esac
 

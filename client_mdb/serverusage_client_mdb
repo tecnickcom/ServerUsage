@@ -6,8 +6,8 @@
 #==============================================================================+
 # File name   : serverusage_client
 # Begin       : 2012-04-12
-# Last Update : 2012-08-15
-# Version     : 6.1.0
+# Last Update : 2012-08-21
+# Version     : 6.2.0
 #
 # Description : Init script to execute ServerUsage-Client-MDB.
 #
@@ -74,9 +74,15 @@ fi
 # Start the service
 start() {
 	if test -f /var/lock/subsys/serverusage_client_mdb ; then
-		echo -n $"Service is Already Running."
-		echo
-		return
+		# check if the process is running
+		if [ ! -z "`ps ax | grep -v grep | grep $PATH_MDBCLIENT`" ]; then
+			echo -n $"Service is Already Running."
+			echo
+			return
+		else
+			# delete the orphan lock file
+			rm -f /var/lock/subsys/serverusage_client_mdb
+		fi
 	fi
 	echo -n $"Starting ServerUsage-Client-MDB: "
 	($CMDMDB)&
@@ -89,7 +95,13 @@ start() {
 # Restart the service
 stop() {
 	echo -n $"Stopping ServerUsage-Client-MDB: "
-	killproc $PATH_MDBCLIENT
+	# check if the process is running
+	if [ ! -z "`ps ax | grep -v grep | grep $PATH_MDBCLIENT`" ]; then
+		# kill the process
+		killproc $PATH_MDBCLIENT
+	else
+		failure $"ServerUsage-Client-MDB stop"
+	fi
 	# delete the lock file
 	rm -f /var/lock/subsys/serverusage_client_mdb
 	echo
@@ -106,12 +118,18 @@ case "$1" in
 	status)
 		status $PATH_MDBCLIENT
 		;;
-	restart|reload|condrestart)
+	restart|reload)
 		stop
 		start
 		;;
+	condrestart)
+		if test -f /var/lock/subsys/serverusage_client_mdb ; then
+			stop
+			start
+		fi
+		;;
 	*)
-		echo $"Usage: $0 {start|stop|restart|reload|status}"
+		echo $"Usage: $0 {start|stop|status|restart|reload|condrestart}"
 		exit 1
 esac
 

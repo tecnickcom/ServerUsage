@@ -1,7 +1,7 @@
 %define release 1
 
 Name:           serverusage_client_mdb
-Version:        6.1.0
+Version:        6.2.0
 Release:        %{release}%{?dist}
 Summary:        ServerUsage-Client-MDB collects MariaDB usage statistics and send them to a remote log server via TCP
 
@@ -13,6 +13,10 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  elfutils-devel, MariaDB-devel
 Requires:       MariaDB-server
+
+Requires(preun): chkconfig
+Requires(preun): initscripts
+Requires(postun): initscripts
 
 %description
 ServerUsage-Client-MDB is a tool to collect MariaDB usage statistics and send 
@@ -39,10 +43,27 @@ make clean
 %doc README LICENSE
 %{_bindir}/serverusage_client_mdb.bin
 %{_bindir}/serverusage_tcpsender_mdb.bin
-%{_sysconfdir}/serverusage_client_mdb.conf
+%config(noreplace) %{_sysconfdir}/serverusage_client_mdb.conf
 %{_initrddir}/serverusage_client_mdb
 %{_mandir}/man8/serverusage_client_mdb.8.gz
 
+%preun
+if [ $1 -eq 0 ] ; then
+	# uninstall: stop service
+	/sbin/service serverusage_client_mdb stop >/dev/null 2>&1
+	/sbin/chkconfig --del serverusage_client_mdb
+fi
+
+%postun
+if [ $1 -eq 1 ] ; then
+	# upgrade: restart service if was running
+	/sbin/service serverusage_client_mdb condrestart >/dev/null 2>&1 || :
+fi
+
 %changelog
+* Thu Aug 21 2012 Nicola Asuni
+- Added %config(noreplace)
+- Added preun and postun sections
+
 * Wed Aug 15 2012 Nicola Asuni
 - First version for RPM packaging.

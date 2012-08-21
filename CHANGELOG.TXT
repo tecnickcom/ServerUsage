@@ -1,3 +1,7 @@
+6.2.0 (2012-08-21)
+	- RPM spec files were changed to avoid overriding the configuration and database files.
+	- Init scripts were improved.
+
 6.1.0 (2012-08-16)
 	- This versin contains a new module to collect user statistics from MariaDB database.
 
