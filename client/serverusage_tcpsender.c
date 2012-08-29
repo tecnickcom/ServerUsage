@@ -3,7 +3,7 @@
 // File name   : serverusage_tcpsender.c
 // Begin       : 2012-02-28
 // Last Update : 2012-08-09
-// Version     : 6.2.0
+// Version     : 6.3.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //

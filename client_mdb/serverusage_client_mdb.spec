@@ -1,12 +1,12 @@
 %define release 1
 
 Name:           serverusage_client_mdb
-Version:        6.2.0
+Version:        6.3.0
 Release:        %{release}%{?dist}
 Summary:        ServerUsage-Client-MDB collects MariaDB usage statistics and send them to a remote log server via TCP
 
 Group:          Applications/System
-License:        AGPLv3
+License:        GPLv2
 URL:            https://github.com/fubralimited/ServerUsage
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)

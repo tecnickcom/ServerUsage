@@ -3,7 +3,7 @@
 // File name   : serverusage_client_mdb.c
 // Begin       : 2012-08-14
 // Last Update : 2012-08-16
-// Version     : 6.2.0
+// Version     : 6.3.0
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -24,22 +24,22 @@
 //               support@fubra.com
 //
 // License:
-//    Copyright (C) 2012-2012 Fubra Limited
+//		Copyright (C) 2012-2012 Fubra Limited
 //
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; version 2 of the License.
+//		This program is free software; you can redistribute it and/or modify
+// 		it under the terms of the GNU General Public License as published by
+// 		the Free Software Foundation; version 2 of the License.
 //
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// 		This program is distributed in the hope that it will be useful,
+// 		but WITHOUT ANY WARRANTY; without even the implied warranty of
+// 		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// 		GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, write to the Free Software Foundation, Inc.,
-// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+// 		You should have received a copy of the GNU General Public License along
+// 		with this program; if not, write to the Free Software Foundation, Inc.,
+// 		51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
-//    See LICENSE.TXT file for more information.
+// 		See LICENSE.TXT file for more information.
 //=============================================================================+
 */
 

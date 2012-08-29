@@ -1,3 +1,6 @@
+6.3.0 (2012-08-29)
+	- Debug mode on server was improved to display milliseconds.
+
 6.2.0 (2012-08-21)
 	- RPM spec files were changed to avoid overriding the configuration and database files.
 	- Init scripts were improved.

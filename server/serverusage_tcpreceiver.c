@@ -2,7 +2,7 @@
 //=============================================================================+
 // File name   : serverusage_tcpreceiver.c
 // Begin       : 2012-02-14
-// Last Update : 2012-08-16
+// Last Update : 2012-08-29
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -71,8 +71,8 @@
 //#define _DEBUG
 #ifdef _DEBUG
 	#include <time.h>
-	time_t starttime;
-	time_t endtime;
+	clock_t starttime;
+	clock_t endtime;
 #endif
 
 /**
@@ -231,8 +231,8 @@ void *connection_thread(void *cargs) {
 	++threadcounter;
 	if (threadcounter == 1) {
 		#ifdef _DEBUG
-			starttime = time(NULL);
-			printf("  START TIME [sec]: %d\n", starttime);
+			starttime = clock();
+			printf("  START TIME [sec]: %.3f\n", (double)starttime / CLOCKS_PER_SEC);
 		#endif
 		// begin the transaction when the first thread is created (we use transactions to improve performances)
 		if (sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &ErrMsg) != SQLITE_OK) {
@@ -302,9 +302,9 @@ void *connection_thread(void *cargs) {
 			sqlite3_free(ErrMsg);
 		}
 		#ifdef _DEBUG
-			endtime = time(NULL);
-			printf("    END TIME [sec]: %d\n", endtime);
-			printf("ELAPSED TIME [sec]: %d\n\n", (endtime - starttime));
+			endtime = clock();
+			printf("    END TIME [sec]: %.3f\n", (double)endtime / CLOCKS_PER_SEC);
+			printf("ELAPSED TIME [sec]: %.3f\n\n", (double)(endtime - starttime) / CLOCKS_PER_SEC);
 		#endif
 	}
 	sem_post(&mutex);
