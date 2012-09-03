@@ -1,7 +1,7 @@
 %define release 1
 
 Name:           serverusage_client_mdb
-Version:        6.3.0
+Version:        6.3.1
 Release:        %{release}%{?dist}
 Summary:        ServerUsage-Client-MDB collects MariaDB usage statistics and send them to a remote log server via TCP
 

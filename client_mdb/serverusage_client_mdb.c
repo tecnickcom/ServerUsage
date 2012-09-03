@@ -2,8 +2,8 @@
 //=============================================================================+
 // File name   : serverusage_client_mdb.c
 // Begin       : 2012-08-14
-// Last Update : 2012-08-16
-// Version     : 6.3.0
+// Last Update : 2012-09-03
+// Version     : 6.3.1
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -57,6 +57,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <mysql.h>
+
+/**
+ * Macro to find the max of two numbers
+ */
+#ifndef max
+	#define max(a,b) (((a)>(b))?(a):(b))
+#endif
 
 /**
  * String buffer length.
@@ -167,7 +174,7 @@ int main(int argc, char *argv[]) {
 								while (dbrow = mysql_fetch_row(dbresult)) {
 									if (dbrow[0] != NULL) {
 										// NOTE: the UID is set to 0 and the user name is set to the IP field
-										fprintf(fp, "@@\t%lu\t%lu\tmysql\t%s\t0\t%s\t%lu\t%lu\t%lu\t0\t0\n", (long)starttime, (long)readtime, srvid, dbrow[0], (long)(atof(dbrow[1]) * tps), atol(dbrow[2]), atol(dbrow[3]));
+										fprintf(fp, "@@\t%lu\t%lu\tmysql\t%s\t0\t%s\t%lu\t%lu\t%lu\t0\t0\n", (long)starttime, (long)readtime, srvid, dbrow[0], max(0, (long)(atof(dbrow[1]) * tps)), max(0, atol(dbrow[2])), max(0, atol(dbrow[3])));
 									}
 								}
 								// mark the end of this block of data with an empty line

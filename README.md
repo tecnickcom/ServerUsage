@@ -3,9 +3,9 @@ ServerUsage - README
 
 + Name: ServerUsage
 
-+ Version: 6.3.0
++ Version: 6.3.1
 
-+ Release date: 2012-08-21
++ Release date: 2012-09-03
 
 + Author: Nicola Asuni
 
@@ -164,7 +164,7 @@ The ServerUsage-Server RPM must be installed only on the Log Server (the compute
 
 As root install the ServerUsage-Server RPM file:
 
-	# rpm -i serverusage_server-6.3.0-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_server-6.3.1-1.el6.$(uname -m).rpm
 	
 Once the RPM is installed you can configure the ServerUsage-Server editing the following file:
 
@@ -193,7 +193,7 @@ The ServerUsage-Client RPM must be installed on each client computer to monitor.
 As root install the SystemTap-Runtime and ServerUsage-Client RPM files:
 
 	# rpm -i systemtap-runtime-1.7-1.el6.$(uname -m).rpm 
-	# rpm -i serverusage_client-6.3.0-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_client-6.3.1-1.el6.$(uname -m).rpm
 
 Configure the ServerUsage-Client
 
@@ -203,7 +203,7 @@ Set the IP address of the Log server where ServerUsage-Server is installed and b
 
 The ServerUsage-Client includes a SysV init script to start/stop/restart the service:
 
-	# /etc/init.d/serverusage_client start|stop|restart
+	# /etc/init.d/serverusage_client start|stop|status|restart|reload|condrestart
 
 When the service is started, the serverusage_client.ko SystemTap kernel module is executed via the staprun command and the output is piped to the serverusage_tcpsender.bin to be sent to the Log server via a TCP connection. If the connection is broken or the Log server is not responding, the log files are temporarily stored on <em>/var/log/serverusage_cache.log</em> file and resent as soon the TCP connection is restored.
 
@@ -219,7 +219,7 @@ The ServerUsage-Client RPM must be installed on the computer containing the Mari
 
 As root install the ServerUsage-Client RPM file:
 
-	# rpm -i serverusage_client_mdb-6.3.0-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_client_mdb-6.3.1-1.el6.$(uname -m).rpm
 
 Configure the ServerUsage-Client
 

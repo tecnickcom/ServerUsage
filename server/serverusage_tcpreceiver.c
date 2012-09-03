@@ -2,7 +2,7 @@
 //=============================================================================+
 // File name   : serverusage_tcpreceiver.c
 // Begin       : 2012-02-14
-// Last Update : 2012-08-29
+// Last Update : 2012-09-03
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -67,6 +67,13 @@
 #include <fcntl.h>
 #include <sqlite3.h>
 
+/**
+ * Macro to find the max of two numbers
+ */
+#ifndef max
+	#define max(a,b) (((a)>(b))?(a):(b))
+#endif
+
 // DEBUG OPTION TO PRINT EXECUTION TIME
 //#define _DEBUG
 #ifdef _DEBUG
@@ -84,11 +91,6 @@
  * Read size for TCP buffer
  */
 #define READBUFLEN 510
-
-/**
- * Max size of the SQL query.
- */
-#define QUERYLEN 1024
 
 /**
  * Number of sockets (IPv4 + IPv6)
@@ -167,17 +169,17 @@ void insert_row(char *row, const char *clientip, unsigned int clientport) {
 	// bind parameters ('%s',%d,%d,%d,'%s','%s',%d,'%s',%d,%d,%d,%d,%d)
 	sqlite3_bind_text(stmt, 1, clientip, -1, SQLITE_TRANSIENT);
 	sqlite3_bind_int(stmt, 2, clientport);
-	sqlite3_bind_int(stmt, 3, strtoul(param[0], NULL, 10));
-	sqlite3_bind_int(stmt, 4, strtoul(param[1], NULL, 10));
+	sqlite3_bind_int(stmt, 3, max(0, atol(param[0])));
+	sqlite3_bind_int(stmt, 4, max(0, atol(param[1])));
 	sqlite3_bind_text(stmt, 5, param[2], -1, SQLITE_TRANSIENT);
 	sqlite3_bind_text(stmt, 6, param[3], -1, SQLITE_TRANSIENT);
-	sqlite3_bind_int(stmt, 7, strtoul(param[4], NULL, 10));
+	sqlite3_bind_int(stmt, 7, max(0, atol(param[4])));
 	sqlite3_bind_text(stmt, 8, param[5], -1, SQLITE_TRANSIENT);
-	sqlite3_bind_int(stmt, 9, strtoul(param[6], NULL, 10));
-	sqlite3_bind_int(stmt, 10, strtoul(param[7], NULL, 10));
-	sqlite3_bind_int(stmt, 11, strtoul(param[8], NULL, 10));
-	sqlite3_bind_int(stmt, 12, strtoul(param[9], NULL, 10));
-	sqlite3_bind_int(stmt, 13, strtoul(param[10], NULL, 10));
+	sqlite3_bind_int(stmt, 9, max(0, atol(param[6])));
+	sqlite3_bind_int(stmt, 10, max(0, atol(param[7])));
+	sqlite3_bind_int(stmt, 11, max(0, atol(param[8])));
+	sqlite3_bind_int(stmt, 12, max(0, atol(param[9])));
+	sqlite3_bind_int(stmt, 13, max(0, atol(param[10])));
 
 	//execute statement
 	sqlite3_step(stmt);
