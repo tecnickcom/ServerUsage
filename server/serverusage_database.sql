@@ -3,7 +3,7 @@
 File name   : serverusage_database.sql
 Begin       : 2012-02-14
 Last Update : 2012-05-16
-Version     : 6.3.1
+Version     : 6.3.2
 
 Website     : https://github.com/fubralimited/ServerUsage
 

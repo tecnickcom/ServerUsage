@@ -7,7 +7,7 @@
 # File name   : serverusage_server
 # Begin       : 2012-04-12
 # Last Update : 2012-08-21
-# Version     : 6.3.1
+# Version     : 6.3.2
 #
 # Description : Init script to execute ServerUsage-Server.
 #
@@ -80,7 +80,7 @@ start() {
 	fi
 	echo -n $"Starting ServerUsage-Server: "
 	#start the process
-	($CMD)&
+	daemon $CMD &
 	# create the lock file
 	touch /var/lock/subsys/serverusage_server
 	# create the cron job to aggregate database data

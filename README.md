@@ -3,7 +3,7 @@ ServerUsage - README
 
 + Name: ServerUsage
 
-+ Version: 6.3.1
++ Version: 6.3.2
 
 + Release date: 2012-09-03
 
@@ -164,7 +164,7 @@ The ServerUsage-Server RPM must be installed only on the Log Server (the compute
 
 As root install the ServerUsage-Server RPM file:
 
-	# rpm -i serverusage_server-6.3.1-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_server-6.3.2-1.el6.$(uname -m).rpm
 	
 Once the RPM is installed you can configure the ServerUsage-Server editing the following file:
 
@@ -193,7 +193,7 @@ The ServerUsage-Client RPM must be installed on each client computer to monitor.
 As root install the SystemTap-Runtime and ServerUsage-Client RPM files:
 
 	# rpm -i systemtap-runtime-1.7-1.el6.$(uname -m).rpm 
-	# rpm -i serverusage_client-6.3.1-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_client-6.3.2-1.el6.$(uname -m).rpm
 
 Configure the ServerUsage-Client
 
@@ -219,7 +219,7 @@ The ServerUsage-Client RPM must be installed on the computer containing the Mari
 
 As root install the ServerUsage-Client RPM file:
 
-	# rpm -i serverusage_client_mdb-6.3.1-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_client_mdb-6.3.2-1.el6.$(uname -m).rpm
 
 Configure the ServerUsage-Client
 
