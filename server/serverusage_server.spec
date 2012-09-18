@@ -1,7 +1,7 @@
 %define release 1
 
 Name:           serverusage_server
-Version:        6.3.2
+Version:        6.3.3
 Release:        %{release}%{?dist}
 Summary:        ServerUsage-Server collects logs data via TCP from ServerUsage-Client
 

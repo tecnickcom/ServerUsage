@@ -6,8 +6,8 @@
 #==============================================================================+
 # File name   : serverusage_client
 # Begin       : 2012-04-12
-# Last Update : 2012-08-21
-# Version     : 6.3.2
+# Last Update : 2012-09-18
+# Version     : 6.3.3
 #
 # Description : Init script to execute ServerUsage-Client-MDB.
 #
@@ -61,6 +61,8 @@ fi
 
 # command to execute
 CMDMDB="$PATH_MDBCLIENT $LOGSERVER_IP $LOGSERVER_PORT $DATABASE_HOST $DATABASE_PORT $DATABASE_USER $DATABASE_PASSWORD $SAMPLING_TIME $SERVER_ID $PATH_TCPSENDER $PATH_TEMPLOG"
+LOCKFILE=/var/lock/subsys/serverusage_client_mdb
+RETVAL=0
 
 # get SystemV Init function library.
 if [ -f /etc/init.d/functions ] ; then
@@ -73,7 +75,7 @@ fi
 
 # Start the service
 start() {
-	if test -f /var/lock/subsys/serverusage_client_mdb ; then
+	if test -f $LOCKFILE ; then
 		# check if the process is running
 		if [ ! -z "`ps ax | grep -v grep | grep $PATH_MDBCLIENT`" ]; then
 			echo -n $"Service is Already Running."
@@ -81,15 +83,15 @@ start() {
 			return
 		else
 			# delete the orphan lock file
-			rm -f /var/lock/subsys/serverusage_client_mdb
+			rm -f $LOCKFILE
 		fi
 	fi
 	echo -n $"Starting ServerUsage-Client-MDB: "
-	daemon $CMDMDB &
-	# create the lock file
-	touch /var/lock/subsys/serverusage_client_mdb
-	success $"ServerUsage-Client-MDB startup"
+	$CMDMDB
+	RETVAL=$?
+	[ $RETVAL = 0 ] && touch $LOCKFILE && success || failure
 	echo
+	return $RETVAL
 }
 
 # Restart the service
@@ -99,12 +101,13 @@ stop() {
 	if [ ! -z "`ps ax | grep -v grep | grep $PATH_MDBCLIENT`" ]; then
 		# kill the process
 		killproc $PATH_MDBCLIENT
+		RETVAL=$?
 	else
 		failure $"ServerUsage-Client-MDB stop"
 	fi
-	# delete the lock file
-	rm -f /var/lock/subsys/serverusage_client_mdb
 	echo
+	rm -f $LOCKFILE
+	return $RETVAL
 }
 
 ### main logic ###
@@ -117,23 +120,24 @@ case "$1" in
 		;;
 	status)
 		status $PATH_MDBCLIENT
+		RETVAL=$?
 		;;
 	restart|reload)
 		stop
 		start
 		;;
 	condrestart)
-		if test -f /var/lock/subsys/serverusage_client_mdb ; then
+		if test -f $LOCKFILE ; then
 			stop
 			start
 		fi
 		;;
 	*)
 		echo $"Usage: $0 {start|stop|status|restart|reload|condrestart}"
-		exit 1
+		RETVAL=2
+		[ "$1" = 'usage' ] && RETVAL=0
 esac
-
-exit 0
+exit $RETVAL
 
 #==============================================================================+
 # END OF FILE

@@ -6,8 +6,8 @@
 #==============================================================================+
 # File name   : serverusage_server
 # Begin       : 2012-04-12
-# Last Update : 2012-08-21
-# Version     : 6.3.2
+# Last Update : 2012-09-18
+# Version     : 6.3.3
 #
 # Description : Init script to execute ServerUsage-Server.
 #
@@ -55,6 +55,8 @@ fi
 
 # start program in background
 CMD="$PATH_TCPRECEIVER $LOGSERVER_PORT $MAX_CONNECTIONS $SQLITE_DATABASE"
+LOCKFILE=/var/lock/subsys/serverusage_server
+RETVAL=0
 
 # get SystemV Init function library.
 if [ -f /etc/init.d/functions ] ; then
@@ -67,7 +69,7 @@ fi
 
 # Start the service
 start() {
-	if test -f /var/lock/subsys/serverusage_server ; then
+	if test -f $LOCKFILE ; then
 		# check if the process is running
 		if [ ! -z "`ps ax | grep -v grep | grep $PATH_TCPRECEIVER`" ]; then
 			echo -n $"Service is Already Running."
@@ -75,23 +77,25 @@ start() {
 			return
 		else
 			# delete the orphan lock file
-			rm -f /var/lock/subsys/serverusage_server
+			rm -f $LOCKFILE
 		fi
 	fi
 	echo -n $"Starting ServerUsage-Server: "
 	#start the process
-	daemon $CMD &
-	# create the lock file
-	touch /var/lock/subsys/serverusage_server
-	# create the cron job to aggregate database data
-	crontab -l > /tmp/crontabo.txt
-	sed '/2,7,12,17,22,27,32,37,42,47,52,57 \* \* \* \* sleep 30; \/usr\/bin\/serverusage_dbagg.sh/d' /tmp/crontabo.txt > /tmp/crontabn.txt
-	echo "2,7,12,17,22,27,32,37,42,47,52,57 * * * * sleep 30; /usr/bin/serverusage_dbagg.sh" >> /tmp/crontabn.txt
-	crontab < /tmp/crontabn.txt
-	rm -f /tmp/crontabo.txt
-	rm -f /tmp/crontabn.txt
-	success $"ServerUsage-Server startup"
+	$CMD
+	RETVAL=$?
+	[ $RETVAL = 0 ] && touch $LOCKFILE && success || failure
 	echo
+	if test -f $LOCKFILE ; then
+		# create the cron job to aggregate database data
+		crontab -l > /tmp/crontabo.txt
+		sed '/2,7,12,17,22,27,32,37,42,47,52,57 \* \* \* \* sleep 30; \/usr\/bin\/serverusage_dbagg.sh/d' /tmp/crontabo.txt > /tmp/crontabn.txt
+		echo "2,7,12,17,22,27,32,37,42,47,52,57 * * * * sleep 30; /usr/bin/serverusage_dbagg.sh" >> /tmp/crontabn.txt
+		crontab < /tmp/crontabn.txt
+		rm -f /tmp/crontabo.txt
+		rm -f /tmp/crontabn.txt
+	fi
+	return $RETVAL
 }
 
 # Restart the service
@@ -101,18 +105,19 @@ stop() {
 	if [ ! -z "`ps ax | grep -v grep | grep $PATH_TCPRECEIVER`" ]; then
 		# kill the process
 		killproc $PATH_TCPRECEIVER
+		RETVAL=$?
 	else
 		failure $"ServerUsage-Server stop"
 	fi
-	# delete the lock file
-	rm -f /var/lock/subsys/serverusage_server
+	echo
+	rm -f $LOCKFILE
 	# remove the cron job
 	crontab -l > /tmp/crontabo.txt
 	sed '/2,7,12,17,22,27,32,37,42,47,52,57 \* \* \* \* sleep 30; \/usr\/bin\/serverusage_dbagg.sh/d' /tmp/crontabo.txt > /tmp/crontabn.txt
 	crontab < /tmp/crontabn.txt
 	rm -f /tmp/crontabo.txt
 	rm -f /tmp/crontabn.txt
-	echo
+	return $RETVAL
 }
 
 ### main logic ###
@@ -125,23 +130,24 @@ case "$1" in
 		;;
 	status)
 		status $CMD
+		RETVAL=$?
 		;;
 	restart|reload)
 		stop
 		start
 		;;
 	condrestart)
-		if test -f /var/lock/subsys/serverusage_server ; then
+		if test -f $LOCKFILE ; then
 			stop
 			start
 		fi
 		;;
 	*)
 		echo $"Usage: $0 {start|stop|status|restart|reload|condrestart}"
-		exit 1
+		RETVAL=2
+		[ "$1" = 'usage' ] && RETVAL=0
 esac
-
-exit 0
+exit $RETVAL
 
 #==============================================================================+
 # END OF FILE

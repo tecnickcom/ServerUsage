@@ -1,3 +1,7 @@
+6.3.3 (2012-09-18)
+	- Programs are now properly daemonized.
+	- Init scripts were fixed.
+
 6.3.2 (2012-09-17)
 	- Init scripts were improved.
 

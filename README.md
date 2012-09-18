@@ -3,9 +3,9 @@ ServerUsage - README
 
 + Name: ServerUsage
 
-+ Version: 6.3.2
++ Version: 6.3.3
 
-+ Release date: 2012-09-03
++ Release date: 2012-09-18
 
 + Author: Nicola Asuni
 

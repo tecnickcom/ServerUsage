@@ -6,8 +6,8 @@
 #==============================================================================+
 # File name   : serverusage_client
 # Begin       : 2012-04-12
-# Last Update : 2012-08-21
-# Version     : 6.3.2
+# Last Update : 2012-09-18
+# Version     : 6.3.3
 #
 # Description : Init script to execute ServerUsage-Client.
 #
@@ -62,6 +62,8 @@ fi
 # commands to execute (systemtap monitoring + tcp sender)
 CMDSTAP="$PATH_STAPRUN -b $BUFFER_SIZE $PATH_STAPMODULE smp=$SAMPLING_TIME srvid=$SERVER_ID"
 CMDTCPS="$PATH_TCPSENDER $LOGSERVER_IP $LOGSERVER_PORT $PATH_TEMPLOG"
+LOCKFILE=/var/lock/subsys/serverusage_client
+RETVAL=0
 
 # get SystemV Init function library.
 if [ -f /etc/init.d/functions ] ; then
@@ -74,23 +76,23 @@ fi
 
 # Start the service
 start() {
-	if test -f /var/lock/subsys/serverusage_client ; then
+	if test -f $LOCKFILE ; then
 		# check if the process is running
 		if [ ! -z "`ps ax | grep -v grep | grep $PATH_STAPIO`" ] && [ ! -z "`ps ax | grep -v grep | grep $PATH_TCPSENDER`" ]; then
 			echo -n $"Service is Already Running."
 			echo
 			return
 		else
-			# delete the orphan processes and lock file
-			stop
+			# delete the orphan lock file
+			rm -f $LOCKFILE
 		fi
 	fi
 	echo -n $"Starting ServerUsage-Client: "
-	daemon $CMDSTAP | $CMDTCPS &
-	# create the lock file
-	touch /var/lock/subsys/serverusage_client
-	success $"ServerUsage-Client startup"
+	(setsid bash -c "($CMDSTAP | $CMDTCPS) & disown %%") </dev/null >&/dev/null &
+	RETVAL=$?
+	[ $RETVAL = 0 ] && touch $LOCKFILE && success || failure
 	echo
+	return $RETVAL
 }
 
 # Restart the service
@@ -100,6 +102,7 @@ stop() {
 	if [ ! -z "`ps ax | grep -v grep | grep $PATH_STAPIO`" ]; then
 		# kill the process
 		killproc $PATH_STAPIO
+		RETVAL=$?
 	else
 		failure $"ServerUsage-Client stop"
 	fi
@@ -107,9 +110,9 @@ stop() {
 		# kill the process
 		killproc $PATH_TCPSENDER
 	fi
-	# delete the lock file
-	rm -f /var/lock/subsys/serverusage_client
 	echo
+	rm -f $LOCKFILE
+	return $RETVAL
 }
 
 ### main logic ###
@@ -122,6 +125,7 @@ case "$1" in
 		;;
 	status)
 		status $PATH_STAPIO
+		RETVAL=$?
 		status $PATH_TCPSENDER
 		;;
 	restart|reload)
@@ -129,17 +133,17 @@ case "$1" in
 		start
 		;;
 	condrestart)
-		if test -f /var/lock/subsys/serverusage_client ; then
+		if test -f $LOCKFILE ; then
 			stop
 			start
 		fi
 		;;
 	*)
 		echo $"Usage: $0 {start|stop|status|restart|reload|condrestart}"
-		exit 1
+		RETVAL=2
+		[ "$1" = 'usage' ] && RETVAL=0
 esac
-
-exit 0
+exit $RETVAL
 
 #==============================================================================+
 # END OF FILE

@@ -2,8 +2,8 @@
 //=============================================================================+
 // File name   : serverusage_client_mdb.c
 // Begin       : 2012-08-14
-// Last Update : 2012-09-03
-// Version     : 6.3.2
+// Last Update : 2012-09-18
+// Version     : 6.3.3
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -79,6 +79,43 @@ void diep(const char *s) {
 }
 
 /**
+ * Daemonize this process.
+ */
+static void daemonize(void) {
+	pid_t pid, sid;
+	if (getppid() == 1) {
+		// this is already a daemon
+		return;
+	}
+	// fork off the parent process
+	pid = fork();
+	if (pid < 0) {
+		exit(1);
+	}
+	// if we got a good PID, then we can exit the parent process
+	if (pid > 0) {
+		exit(0);
+	}
+	// at this point we are executing as the child process
+	// change the file mode mask
+	umask(0);
+	// create a new SID for the child process
+	sid = setsid();
+	if (sid < 0) {
+		exit(1);
+	}
+	// change the current working directory to prevents the current directory from being locked
+	if ((chdir("/")) < 0) {
+		exit(1);
+	}
+	// redirect standard files to /dev/null
+	FILE *ignore;
+	ignore = freopen( "/dev/null", "r", stdin);
+	ignore = freopen( "/dev/null", "w", stdout);
+	ignore = freopen( "/dev/null", "w", stderr);
+}
+
+/**
  * Main function.
  * @param argc Argument counter.
  * @param argv[] Array of arguments: port, max_connections, mysql_server, mysql_user, mysql_password, mysql_database, mysql_table.
@@ -116,6 +153,8 @@ int main(int argc, char *argv[]) {
 	// Full path to temporary cache file
 	char *cachefile = (char *)argv[10];
 
+	// daemonize this program
+	daemonize();
 
 	// set command to send data to ServerUsage-Server
 	char tcpcmd[BUFLEN];
