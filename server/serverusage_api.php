@@ -19,7 +19,7 @@
 //               Aldershot
 //               Hampshire
 //               GU12 4RQ
-//				 UK
+// 							 UK
 //               http://www.rackmap.net
 //               support@rackmap.net
 //
@@ -58,7 +58,7 @@ PARAMETERS:
 
 	from: (integer) starting timestamp in seconds since EPOCH;
 	to: (integer) starting timestamp in seconds since EPOCH;
-	metric: type of info to extract; Possible values are: 'uid', 'ip', 'uip', 'grp', 'glb', 'all'. The return values for each metric are:
+	metric: (do not work with svg mode) type of info to extract; Possible values are: 'uid', 'ip', 'uip', 'grp', 'glb', 'all'. The return values for each metric are:
 		uid : user_id, cpu_ticks;
 		ip  : ip, net_in, net_out;
 		uip : user_id, ip, cpu_ticks, io_read, io_write, net_in, net_out;
@@ -74,7 +74,7 @@ PARAMETERS:
 	width: (integer) optional width for SVG output (default 1024; minimum 50).
 	height: (integer) optional height for SVG output; will be rounded to a multiple of 5 (default 750, minimum 50).
 	scale: linear = vertical linear scale (default), log = vertical logarithmic scale.
-	bgcol: type of background color: 'dark' or 'light' (default).
+	bgcol: type of background color: 'dark' or 'light' (default). Note: the SVG background is always transparent.
 	gtype: sequence of number representing the graphs to display: 1 = CPU TICKS, 2 = IO READ, 3 = IO WRITE, 4 = NET IN, 5 = NET OUT. Default: 12345.
 
 USAGE EXAMPLES:
@@ -93,9 +93,9 @@ USAGE EXAMPLES:
 
 	SVG:
 		serverusage_api.php?from=1332769800&to=1332845100&mode=svg&width=1024&height=750&scale=log
-		serverusage_api.php?from=1333532663&to=1333627917&metric=glb&mode=svg&scale=log&bgcol=light&gtype=12345
-		serverusage_api.php?from=1333532663&to=1333627917&metric=glb&mode=svg&scale=linear&bgcol=light&gtype=15
-		serverusage_api.php?from=1333532663&to=1333627917&metric=glb&mode=svg&scale=log&bgcol=light&gtype=5
+		serverusage_api.php?from=1333532663&to=1333627917&mode=svg&scale=log&bgcol=light&gtype=12345
+		serverusage_api.php?from=1333532663&to=1333627917&mode=svg&scale=linear&bgcol=light&gtype=15
+		serverusage_api.php?from=1333532663&to=1333627917&mode=svg&scale=log&bgcol=light&gtype=5
 
 OUTPUT:
 
