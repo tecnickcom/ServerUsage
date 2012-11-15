@@ -58,7 +58,7 @@ PARAMETERS:
 
 	from: (integer) starting timestamp in seconds since EPOCH;
 	to: (integer) starting timestamp in seconds since EPOCH;
-	metric: (do not work with svg mode) type of info to extract; Possible values are: 'uid', 'ip', 'uip', 'grp', 'glb', 'all'. The return values for each metric are:
+	metric: (not available with svg mode) type of info to extract; Possible values are: 'uid', 'ip', 'uip', 'grp', 'glb', 'all'. The return values for each metric are:
 		uid : user_id, cpu_ticks;
 		ip  : ip, net_in, net_out;
 		uip : user_id, ip, cpu_ticks, io_read, io_write, net_in, net_out;
@@ -86,7 +86,7 @@ USAGE EXAMPLES:
 		serverusage_api.php?from=1332769800&to=1332845100&metric=all&uid=320&mode=json
 
 	CSV:
-		serverusage_api.php?from=1332769800&to=1332845100&metric=all&uid=320&mode=psa
+		serverusage_api.php?from=1332769800&to=1332845100&metric=all&uid=320&mode=csv
 
 	BASE64 ENCODED PHP SERIALIZED ARRAY:
 		serverusage_api.php?from=1332769800&to=1332845100&metric=all&uid=320&mode=psa
