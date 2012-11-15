@@ -7,7 +7,7 @@
 # File name   : serverusage_server
 # Begin       : 2012-04-12
 # Last Update : 2012-09-18
-# Version     : 6.3.3
+# Version     : 6.3.4
 #
 # Description : Init script to execute ServerUsage-Server.
 #
@@ -22,7 +22,7 @@
 #               Aldershot
 #               Hampshire
 #               GU12 4RQ
-#				UK
+#               UK
 #               http://www.fubra.com
 #               support@fubra.com
 #

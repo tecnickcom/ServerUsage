@@ -3,7 +3,7 @@
 // File name   : serverusage_api.php
 // Begin       : 2012-03-12
 // Last Update : 2012-05-17
-// Version     : 6.3.3
+// Version     : 6.3.4
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -60,8 +60,11 @@ PARAMETERS:
 	to: (integer) starting timestamp in seconds since EPOCH;
 	metric: (not available with svg mode) type of info to extract; Possible values are: 'uid', 'ip', 'uip', 'grp', 'glb', 'all'. The return values for each metric are:
 		uid : user_id, cpu_ticks;
+		uidt : user_id, cpu_ticks, minimum start time, maximum end time;
 		ip  : ip, net_in, net_out;
+		ipt  : ip, net_in, net_out, minimum start time, maximum end time;
 		uip : user_id, ip, cpu_ticks, io_read, io_write, net_in, net_out;
+		uipt : user_id, ip, cpu_ticks, io_read, io_write, net_in, net_out, minimum start time, maximum end time;
 		grp : start_time, end_time, user_id, ip, cpu_ticks, io_read, io_write, net_in, net_out;
 		glb : (default for SVG mode) lah_start_time, lah_end_time, lah_cpu_ticks, lah_io_read, lah_io_write, lah_netin, lah_netout;
 		all : start_time, end_time, process, user_id, ip, cpu_ticks, io_read, io_write, net_in, net_out.
@@ -81,7 +84,11 @@ USAGE EXAMPLES:
 
 	JSON:
 		serverusage_api.php?from=1332769800&to=1332845100&metric=uid&mode=json
+		serverusage_api.php?from=1332769800&to=1332845100&metric=uidt&mode=json
 		serverusage_api.php?from=1332769800&to=1332845100&metric=ip&mode=json
+		serverusage_api.php?from=1332769800&to=1332845100&metric=ipt&mode=json
+		serverusage_api.php?from=1332769800&to=1332845100&metric=uip&mode=json
+		serverusage_api.php?from=1332769800&to=1332845100&metric=uipt&mode=json
 		serverusage_api.php?from=1332769800&to=1332845100&metric=all&mode=json
 		serverusage_api.php?from=1332769800&to=1332845100&metric=all&uid=320&mode=json
 
@@ -217,12 +224,24 @@ switch ($metric) {
 		$sql = 'SELECT lah_user_id, SUM(lah_cpu_ticks) FROM log_agg_hst'.$sqlwhere.' GROUP BY lah_user_id';
 		break;
 	}
+	case 'uidt' : {
+		$sql = 'SELECT lah_user_id, SUM(lah_cpu_ticks), MIN(lah_start_time), MAX(lah_end_time) FROM log_agg_hst'.$sqlwhere.' GROUP BY lah_user_id';
+		break;
+	}
 	case 'ip' : {
 		$sql = 'SELECT lah_ip, SUM(lah_netin), SUM(lah_netout) FROM log_agg_hst'.$sqlwhere.' GROUP BY lah_ip';
 		break;
 	}
+	case 'ipt' : {
+		$sql = 'SELECT lah_ip, SUM(lah_netin), SUM(lah_netout), MIN(lah_start_time), MAX(lah_end_time) FROM log_agg_hst'.$sqlwhere.' GROUP BY lah_ip';
+		break;
+	}
 	case 'uip' : {
 		$sql = 'SELECT lah_user_id, lah_ip, SUM(lah_cpu_ticks), SUM(lah_io_read), SUM(lah_io_write), SUM(lah_netin), SUM(lah_netout) FROM log_agg_hst'.$sqlwhere.' GROUP BY lah_user_id, lah_ip';
+		break;
+	}
+	case 'uipt' : {
+		$sql = 'SELECT lah_user_id, lah_ip, SUM(lah_cpu_ticks), SUM(lah_io_read), SUM(lah_io_write), SUM(lah_netin), SUM(lah_netout), MIN(lah_start_time), MAX(lah_end_time) FROM log_agg_hst'.$sqlwhere.' GROUP BY lah_user_id, lah_ip';
 		break;
 	}
 	case 'grp' : {

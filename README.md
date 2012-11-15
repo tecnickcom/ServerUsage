@@ -3,9 +3,9 @@ ServerUsage - README
 
 + Name: ServerUsage
 
-+ Version: 6.3.3
++ Version: 6.3.4
 
-+ Release date: 2012-09-18
++ Release date: 2012-11-15
 
 + Author: Nicola Asuni
 
@@ -36,8 +36,7 @@ See LICENSE.TXT file for more information.
 DESCRIPTION:
 ------------
 
-The ServerUsage system is designed to collect and process statistic information from computers
-running a GNU-Linux Operating System.
+The ServerUsage system is designed to collect and process statistic information from computers running a GNU-Linux Operating System.
 
 This project is composed by:
 
@@ -46,8 +45,7 @@ This project is composed by:
 
 The ServerUsage-Server program listen on a TCP port for incoming log data (from ServerUsage-Client) and store them on a SQLite table. An script (serverusage_dbagg.sh) is executed periodically to aggregate data on another table and delete obsolete data.
 
-The serverusage_api.php script can be remotely used to extract formatted data 
-from the database or display graphs.
+The serverusage_api.php script can be remotely used to extract formatted data from the database or display graphs.
 
 
 ## ServerUsage-Client ##
@@ -70,6 +68,65 @@ The ServerUsage-Client-MDB program is used to collect user statistics form a Mar
 	[SQLite log_raw table]==>[serverusage_dbagg.sh]==>[SQLite log_agg_hst table (aggregated data)]
 
 	[SQLite log_agg_hst table]==>[serverusage_api.php]==>[Data with selected format or SVG graph]
+
+## API ##
+
+The serverusage_api.php script can be remotely used to extract formatted data from the database or display graphs.
+
+### PARAMETERS: ###
+
+	from: (integer) starting timestamp in seconds since EPOCH;
+	to: (integer) starting timestamp in seconds since EPOCH;
+	metric: (not available with svg mode) type of info to extract; Possible values are: 'uid', 'ip', 'uip', 'grp', 'glb', 'all'. The return values for each metric are:
+		uid : user_id, cpu_ticks;
+		uidt : user_id, cpu_ticks, minimum start time, maximum end time;
+		ip  : ip, net_in, net_out;
+		ipt  : ip, net_in, net_out, minimum start time, maximum end time;
+		uip : user_id, ip, cpu_ticks, io_read, io_write, net_in, net_out;
+		uipt : user_id, ip, cpu_ticks, io_read, io_write, net_in, net_out, minimum start time, maximum end time;
+		grp : start_time, end_time, user_id, ip, cpu_ticks, io_read, io_write, net_in, net_out;
+		glb : (default for SVG mode) lah_start_time, lah_end_time, lah_cpu_ticks, lah_io_read, lah_io_write, lah_netin, lah_netout;
+		all : start_time, end_time, process, user_id, ip, cpu_ticks, io_read, io_write, net_in, net_out.
+	uid : (integer) if set, filter result for the requested user ID;
+	ip : (IP address) if set, filter result for the requested IP address.
+	mode: output format ('json' = JSON, 'csv' = CSV TAB-Separated Values, 'sarr' = base64 encoded PHP Serialized array, 'svg' = SVG).
+
+	ADDITIONAL PARAMETERS FOR SVG MODE:
+
+	width: (integer) optional width for SVG output (default 1024; minimum 50).
+	height: (integer) optional height for SVG output; will be rounded to a multiple of 5 (default 750, minimum 50).
+	scale: linear = vertical linear scale (default), log = vertical logarithmic scale.
+	bgcol: type of background color: 'dark' or 'light' (default). Note: the SVG background is always transparent.
+	gtype: sequence of number representing the graphs to display: 1 = CPU TICKS, 2 = IO READ, 3 = IO WRITE, 4 = NET IN, 5 = NET OUT. Default: 12345.
+
+### USAGE EXAMPLES: ###
+
+	JSON:
+		serverusage_api.php?from=1332769800&to=1332845100&metric=uid&mode=json
+		serverusage_api.php?from=1332769800&to=1332845100&metric=uidt&mode=json
+		serverusage_api.php?from=1332769800&to=1332845100&metric=ip&mode=json
+		serverusage_api.php?from=1332769800&to=1332845100&metric=ipt&mode=json
+		serverusage_api.php?from=1332769800&to=1332845100&metric=uip&mode=json
+		serverusage_api.php?from=1332769800&to=1332845100&metric=uipt&mode=json
+		serverusage_api.php?from=1332769800&to=1332845100&metric=all&mode=json
+		serverusage_api.php?from=1332769800&to=1332845100&metric=all&uid=320&mode=json
+
+	CSV:
+		serverusage_api.php?from=1332769800&to=1332845100&metric=all&uid=320&mode=csv
+
+	BASE64 ENCODED PHP SERIALIZED ARRAY:
+		serverusage_api.php?from=1332769800&to=1332845100&metric=all&uid=320&mode=psa
+
+	SVG:
+		serverusage_api.php?from=1332769800&to=1332845100&mode=svg&width=1024&height=750&scale=log
+		serverusage_api.php?from=1333532663&to=1333627917&mode=svg&scale=log&bgcol=light&gtype=12345
+		serverusage_api.php?from=1333532663&to=1333627917&mode=svg&scale=linear&bgcol=light&gtype=15
+		serverusage_api.php?from=1333532663&to=1333627917&mode=svg&scale=log&bgcol=light&gtype=5
+
+### OUTPUT: ###
+
+	The output format can be JSON (JavaScript Object Notation), CSV (tab-separated text values), Base64 encoded serialized array or SVG (Scalable Vector Graphics).
+
 
 
 HOW-TO CREATE ServerUsage RPMs
@@ -164,7 +221,7 @@ The ServerUsage-Server RPM must be installed only on the Log Server (the compute
 
 As root install the ServerUsage-Server RPM file:
 
-	# rpm -i serverusage_server-6.3.3-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_server-6.3.4-1.el6.$(uname -m).rpm
 	
 Once the RPM is installed you can configure the ServerUsage-Server editing the following file:
 
@@ -192,8 +249,8 @@ The ServerUsage-Client RPM must be installed on each client computer to monitor.
 
 As root install the SystemTap-Runtime and ServerUsage-Client RPM files:
 
-	# rpm -i systemtap-runtime-1.7-1.el6.$(uname -m).rpm 
-	# rpm -i serverusage_client-6.3.3-1.el6.$(uname -m).rpm
+	# yum -y install systemtap-runtime
+	# rpm -i serverusage_client-6.3.4-1.el6.$(uname -m).rpm
 
 Configure the ServerUsage-Client
 
@@ -219,7 +276,7 @@ The ServerUsage-Client RPM must be installed on the computer containing the Mari
 
 As root install the ServerUsage-Client RPM file:
 
-	# rpm -i serverusage_client_mdb-6.3.3-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_client_mdb-6.3.4-1.el6.$(uname -m).rpm
 
 Configure the ServerUsage-Client
 
