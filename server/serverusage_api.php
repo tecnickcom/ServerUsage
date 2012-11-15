@@ -192,10 +192,10 @@ if ($mode == 'svg') {
 		$numgraphs = 5;
 		$gtype = array(2,3,4,5,6);
 	}
-} elseif (isset($_GET['metric']) AND in_array($_GET['metric'], array('uid', 'ip', 'uip', 'grp', 'glb', 'all'))) {
+} elseif (isset($_GET['metric']) AND in_array($_GET['metric'], array('uid', 'uidt', 'ip', 'ipt', 'uip', 'uipt', 'grp', 'glb', 'all'))) {
 	$metric = $_GET['metric'];
 } else {
-	header('Wrong \'metric\' parameter [\'uid\', \'ip\', \'uip\', \'grp\', \'glb\', \'all\']', true, 501);
+	header('Wrong \'metric\' parameter [\'uid\', \'uidt\', \'ip\', \'ipt\', \'uip\', \'uipt\', \'grp\', \'glb\', \'all\']', true, 501);
 	exit;
 }
 
