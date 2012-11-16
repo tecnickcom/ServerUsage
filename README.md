@@ -127,7 +127,16 @@ The serverusage_api.php script can be remotely used to extract formatted data fr
 
 	The output format can be JSON (JavaScript Object Notation), CSV (tab-separated text values), Base64 encoded serialized array or SVG (Scalable Vector Graphics).
 
+### ADDITIONAL NOTES: ###
 
+	The reference time for all servers should be the standard UTC.
+	The latest available time on the ServerUsage-Server aggregated table is always in the past by the value specified by DB_AGGREGATION_DELAY constant (by default 5 minutes).
+	The time interval can be calculated as follows:
+
+		polling_interval = 900; // 15 minutes * 60 seconds; must be equal or greater than 5 minutes.
+		delay_time = 600; // 10 minutes * 60 seconds; must be equal or greater than 10 minutes.
+		end_time = (current_time - delay_time);
+		start_time = (end_time - polling_interval);
 
 HOW-TO CREATE ServerUsage RPMs
 ------------------------------
