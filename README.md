@@ -133,8 +133,8 @@ The serverusage_api.php script can be remotely used to extract formatted data fr
 	The latest available time on the ServerUsage-Server aggregated table is always in the past by the value specified by DB_AGGREGATION_DELAY constant (by default 5 minutes).
 	The time interval can be calculated as follows:
 
-		polling_interval = 900; // 15 minutes * 60 seconds; must be equal or greater than 5 minutes.
-		delay_time = 600; // 10 minutes * 60 seconds; must be equal or greater than 10 minutes.
+		polling_interval = 900; // 15 minutes * 60 seconds; must be equal or greater than DB_AGGREGATION_DELAY.
+		delay_time = 600; // 10 minutes * 60 seconds; must be equal or greater than (2 * DB_AGGREGATION_DELAY).
 		end_time = (current_time - delay_time);
 		start_time = (end_time - polling_interval);
 
