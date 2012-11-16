@@ -89,7 +89,7 @@ The serverusage_api.php script can be remotely used to extract formatted data fr
 		all : start_time, end_time, process, user_id, ip, cpu_ticks, io_read, io_write, net_in, net_out.
 	uid : (integer) if set, filter result for the requested user ID;
 	ip : (IP address) if set, filter result for the requested IP address.
-	mode: output format ('json' = JSON, 'csv' = CSV TAB-Separated Values, 'sarr' = base64 encoded PHP Serialized array, 'svg' = SVG).
+	mode: output format ('json' = JSON, 'csv' = CSV TAB-Separated Values, 'psa' = base64 encoded PHP Serialized array, 'svg' = SVG).
 
 	ADDITIONAL PARAMETERS FOR SVG MODE:
 

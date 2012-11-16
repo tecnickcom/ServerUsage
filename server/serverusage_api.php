@@ -2,7 +2,7 @@
 //=============================================================================+
 // File name   : serverusage_api.php
 // Begin       : 2012-03-12
-// Last Update : 2012-05-17
+// Last Update : 2012-11-16
 // Version     : 6.3.4
 //
 // Website     : https://github.com/fubralimited/ServerUsage
@@ -70,7 +70,7 @@ PARAMETERS:
 		all : start_time, end_time, process, user_id, ip, cpu_ticks, io_read, io_write, net_in, net_out.
 	uid : (integer) if set, filter result for the requested user ID;
 	ip : (IP address) if set, filter result for the requested IP address.
-	mode: output format ('json' = JSON, 'csv' = CSV TAB-Separated Values, 'sarr' = base64 encoded PHP Serialized array, 'svg' = SVG).
+	mode: output format ('json' = JSON, 'csv' = CSV TAB-Separated Values, 'psa' = base64 encoded PHP Serialized array, 'svg' = SVG).
 
 	ADDITIONAL PARAMETERS FOR SVG MODE:
 
