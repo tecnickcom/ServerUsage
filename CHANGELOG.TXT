@@ -1,4 +1,4 @@
-6.3.4 (2012-11-15)
+6.3.5 (2012-11-15)
 	- The serverusa_api.php script was improved to include new metric options. Read the documentation on the file source code for more information.
 
 6.3.3 (2012-09-18)
