@@ -3,9 +3,9 @@ ServerUsage - README
 
 + Name: ServerUsage
 
-+ Version: 6.3.5
++ Version: 6.3.6
 
-+ Release date: 2012-11-22
++ Release date: 2012-11-29
 
 + Author: Nicola Asuni
 
@@ -76,7 +76,7 @@ The serverusage_api.php script can be remotely used to extract formatted data fr
 ### PARAMETERS: ###
 
 	from: (integer) starting timestamp in seconds since EPOCH;
-	to: (integer) starting timestamp in seconds since EPOCH;
+	to: (integer) starting timestamp in seconds since EPOCH - this value can be at maximum equal to (current_time - (2 * DB_AGGREGATION_DELAY)) that is also the default value;
 	metric: (not available with svg mode) type of info to extract; Possible values are: 'uid', 'ip', 'uip', 'grp', 'glb', 'all'. The return values for each metric are:
 		uid : user_id, cpu_ticks;
 		uidt : user_id, cpu_ticks, minimum start time, maximum end time;
@@ -103,7 +103,7 @@ The serverusage_api.php script can be remotely used to extract formatted data fr
 
 	JSON:
 		serverusage_api.php?from=1332769800&to=1332845100&metric=uid&mode=json
-		serverusage_api.php?from=1332769800&to=1332845100&metric=uidt&mode=json
+		serverusage_api.php?from=1332769800&metric=uidt&mode=json
 		serverusage_api.php?from=1332769800&to=1332845100&metric=ip&mode=json
 		serverusage_api.php?from=1332769800&to=1332845100&metric=ipt&mode=json
 		serverusage_api.php?from=1332769800&to=1332845100&metric=uip&mode=json
@@ -131,7 +131,7 @@ The serverusage_api.php script can be remotely used to extract formatted data fr
 
 	The reference time for all servers should be the standard UTC.
 	The latest available time on the ServerUsage-Server aggregated table is always in the past by the value specified by DB_AGGREGATION_DELAY constant (by default 5 minutes).
-	The time interval can be calculated as follows:
+	A valid time interval, for example, can be calculated as follows:
 
 		polling_interval = 900; // 15 minutes * 60 seconds; must be equal or greater than DB_AGGREGATION_DELAY.
 		delay_time = 600; // 10 minutes * 60 seconds; must be equal or greater than (2 * DB_AGGREGATION_DELAY).
@@ -230,7 +230,7 @@ The ServerUsage-Server RPM must be installed only on the Log Server (the compute
 
 As root install the ServerUsage-Server RPM file:
 
-	# rpm -i serverusage_server-6.3.5-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_server-6.3.6-1.el6.$(uname -m).rpm
 	
 Once the RPM is installed you can configure the ServerUsage-Server editing the following file:
 
@@ -259,7 +259,7 @@ The ServerUsage-Client RPM must be installed on each client computer to monitor.
 As root install the SystemTap-Runtime and ServerUsage-Client RPM files:
 
 	# yum -y install systemtap-runtime
-	# rpm -i serverusage_client-6.3.5-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_client-6.3.6-1.el6.$(uname -m).rpm
 
 Configure the ServerUsage-Client
 
@@ -285,7 +285,7 @@ The ServerUsage-Client RPM must be installed on the computer containing the Mari
 
 As root install the ServerUsage-Client RPM file:
 
-	# rpm -i serverusage_client_mdb-6.3.5-1.el6.$(uname -m).rpm
+	# rpm -i serverusage_client_mdb-6.3.6-1.el6.$(uname -m).rpm
 
 Configure the ServerUsage-Client
 

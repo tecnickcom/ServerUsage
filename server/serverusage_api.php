@@ -2,8 +2,8 @@
 //=============================================================================+
 // File name   : serverusage_api.php
 // Begin       : 2012-03-12
-// Last Update : 2012-11-16
-// Version     : 6.3.5
+// Last Update : 2012-11-29
+// Version     : 6.3.6
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
@@ -51,13 +51,12 @@
  * @since 2012-03-12
  */
 
-
 /*
 
 PARAMETERS:
 
 	from: (integer) starting timestamp in seconds since EPOCH;
-	to: (integer) starting timestamp in seconds since EPOCH;
+	to: (integer) starting timestamp in seconds since EPOCH - this value can be at maximum equal to (current_time - (2 * DB_AGGREGATION_DELAY)) that is also the default value;
 	metric: (not available with svg mode) type of info to extract; Possible values are: 'uid', 'ip', 'uip', 'grp', 'glb', 'all'. The return values for each metric are:
 		uid : user_id, cpu_ticks;
 		uidt : user_id, cpu_ticks, minimum start time, maximum end time;
@@ -84,7 +83,7 @@ USAGE EXAMPLES:
 
 	JSON:
 		serverusage_api.php?from=1332769800&to=1332845100&metric=uid&mode=json
-		serverusage_api.php?from=1332769800&to=1332845100&metric=uidt&mode=json
+		serverusage_api.php?from=1332769800&metric=uidt&mode=json
 		serverusage_api.php?from=1332769800&to=1332845100&metric=ip&mode=json
 		serverusage_api.php?from=1332769800&to=1332845100&metric=ipt&mode=json
 		serverusage_api.php?from=1332769800&to=1332845100&metric=uip&mode=json
@@ -112,7 +111,7 @@ ADDITIONAL NOTES:
 
 	The reference time for all servers should be the standard UTC.
 	The latest available time on the ServerUsage-Server aggregated table is always in the past by the value specified by DB_AGGREGATION_DELAY constant (by default 5 minutes).
-	The time interval can be calculated as follows:
+	A valid time interval, for example, can be calculated as follows:
 
 		polling_interval = 900; // 15 minutes * 60 seconds; must be equal or greater than DB_AGGREGATION_DELAY.
 		delay_time = 600; // 10 minutes * 60 seconds; must be equal or greater than (2 * DB_AGGREGATION_DELAY).
@@ -139,14 +138,26 @@ define ('K_DATABASE_NAME', $conf['SQLITE_DATABASE']);
 
 // check input parameters
 
-if (!isset($_GET['from']) OR (($from = intval($_GET['from'])) <= 0)) {
-	// starting time must be greater than zero
-	header('Missing or wrong \'from\' parameter', true, 501);
+// get the starting time
+if (isset($_GET['from'])) {
+	$from_time = max(0, intval($_GET['from']));
+} else {
+	header('Missing \'from\' parameter', true, 501);
 	exit;
 }
-if (!isset($_GET['to']) OR (($to = intval($_GET['to'])) < ($from + 60))) {
-	// ending time must be at least 60 seconds greater than starting time
-	header('Missing or wrong \'to\' parameter', true, 501);
+// maximum end time that can be returned
+$max_end_time = (time() - (2 * intval($conf['DB_AGGREGATION_DELAY'])));
+// get the end time
+if (isset($_GET['to'])) {
+	$to_time = min($max_end_time, intval($_GET['to']));
+} else {
+	// set the default value
+	$to_time = $max_end_time;
+}
+// check start time
+if ($to_time < ($from_time + 60)) {
+	// starting time must be greater than zero
+	header('The specified time interval is too short', true, 501);
 	exit;
 }
 if (!isset($_GET['mode'])) {
@@ -221,7 +232,7 @@ try {
 }
 
 // create the "where" portion of SQL query
-$sqlwhere = ' WHERE lah_start_time>='.$from.' AND lah_end_time<='.$to.'';
+$sqlwhere = ' WHERE lah_start_time>='.$from_time.' AND lah_end_time<='.$to_time.'';
 if (isset($_GET['uid']) AND (($uid = intval($_GET['uid'])) >= 0)) {
 	$sqlwhere .= ' AND lah_user_id='.$uid.'';
 }
@@ -379,7 +390,7 @@ switch ($mode) {
 		$svg = '<'.'?'.'xml version="1.0" standalone="no"'.'?'.'>'."\n";
 		$svg .= '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">'."\n";
 		$svg .= '<svg width="'.$width.'" height="'.$height.'" version="1.1" xmlns="http://www.w3.org/2000/svg">'."\n";
-		$svg .= "\t".'<desc>SERVERUSAGE DATA FROM:'.$from.' TO:'.$to.'</desc>'."\n";
+		$svg .= "\t".'<desc>SERVERUSAGE DATA FROM:'.$from_time.' TO:'.$to_time.'</desc>'."\n";
 		// count the number of time points
 		$numpoints = count($data);
 		// draw lines between points

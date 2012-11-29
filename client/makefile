@@ -3,9 +3,9 @@
 # File name   : makefile
 # Begin       : 2012-04-16
 # Last Update : 2012-07-18
-# Version     : 6.3.5
+# Version     : 6.3.6
 #
-# Website     : https:#github.com/fubralimited/ServerUsage
+# Website     : htps://github.com/fubralimited/ServerUsage
 #
 # Description : Makefile to build ServerUsage-Client.
 #

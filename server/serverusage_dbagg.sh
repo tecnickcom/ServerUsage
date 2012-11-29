@@ -3,7 +3,7 @@
 # File name   : serverusage_dbagg.sh
 # Begin       : 2012-02-14
 # Last Update : 2012-08-08
-# Version     : 6.3.5
+# Version     : 6.3.6
 #
 # Website     : https://github.com/fubralimited/ServerUsage
 #
