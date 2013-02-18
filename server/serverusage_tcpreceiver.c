@@ -428,7 +428,7 @@ int main(int argc, char *argv[]) {
 	fd_set mset, wset;
 
 	// initialize descriptor for select
-    FD_ZERO(&mset);
+	FD_ZERO(&mset);
 
 	// structures to handle address information
 	struct addrinfo hints, *res, *aip;

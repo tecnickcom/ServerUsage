@@ -2,7 +2,7 @@
 //=============================================================================+
 // File name   : serverusage_api.php
 // Begin       : 2012-03-12
-// Last Update : 2012-11-29
+// Last Update : 2013-01-18
 // Version     : 6.3.6
 //
 // Website     : https://github.com/fubralimited/ServerUsage
@@ -182,7 +182,7 @@ if ($mode == 'svg') {
 		// round to a multiple of 5
 		$height = (5 * intval(max(50, intval($_GET['height'])) / 5));
 	} else {
-		// default width
+		// default height
 		$height = 750;
 	}
 	if (isset($_GET['scale']) AND ($_GET['scale'] == 'log')) {
@@ -296,7 +296,7 @@ try {
 switch ($mode) {
 	case 'csv' : {
 		// send headers
-		header('Content-Description: CSV Data');
+		header('Content-Description: TSV Data');
 		header('Cache-Control: public, must-revalidate, max-age=0'); // HTTP/1.1
 		header('Pragma: public');
 		header('Expires: Sat, 26 Jul 1997 05:00:00 GMT'); // Date in the past
@@ -304,7 +304,7 @@ switch ($mode) {
 		header('Content-Type: text/csv', false);
 		// Turn on output buffering with the gzhandler
 		ob_start('ob_gzhandler');
-		// output code as CSV tab-separated values
+		// output code as TSV tab-separated values
 		foreach ($data as $row) {
 			echo implode("\t", $row)."\n";
 		}
