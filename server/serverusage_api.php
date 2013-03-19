@@ -3,7 +3,7 @@
 // File name   : serverusage_api.php
 // Begin       : 2012-03-12
 // Last Update : 2013-01-18
-// Version     : 6.3.6
+// Version     : 6.3.7
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //

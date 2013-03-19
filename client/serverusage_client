@@ -6,8 +6,8 @@
 #==============================================================================+
 # File name   : serverusage_client
 # Begin       : 2012-04-12
-# Last Update : 2012-09-18
-# Version     : 6.3.6
+# Last Update : 2013-03-19
+# Version     : 6.3.7
 #
 # Description : Init script to execute ServerUsage-Client.
 #
@@ -62,7 +62,9 @@ fi
 # commands to execute (systemtap monitoring + tcp sender)
 CMDSTAP="$PATH_STAPRUN -b $BUFFER_SIZE $PATH_STAPMODULE smp=$SAMPLING_TIME srvid=$SERVER_ID"
 CMDTCPS="$PATH_TCPSENDER $LOGSERVER_IP $LOGSERVER_PORT $PATH_TEMPLOG"
-LOCKFILE=/var/lock/subsys/serverusage_client
+LOCKFILE="/var/lock/serverusage_client"
+PID=`ps ax | grep -v grep | grep "$PATH_STAPIO" | awk '{print $1;}'`
+PIDB=`ps ax | grep -v grep | grep "$PATH_TCPSENDER" | awk '{print $1;}'`
 RETVAL=0
 
 # get SystemV Init function library.
@@ -70,16 +72,19 @@ if [ -f /etc/init.d/functions ] ; then
 	. /etc/init.d/functions
 elif [ -f /etc/rc.d/init.d/functions ] ; then
 	. /etc/rc.d/init.d/functions
+elif [ -f /lib/lsb/init-functions ] ; then
+	. /lib/lsb/init-functions
 else
 	exit 1
 fi
 
 # Start the service
 start() {
+	echo -n "Starting ServerUsage-Client: "
 	if test -f $LOCKFILE ; then
 		# check if the process is running
-		if [ ! -z "`ps ax | grep -v grep | grep $PATH_STAPIO`" ] && [ ! -z "`ps ax | grep -v grep | grep $PATH_TCPSENDER`" ]; then
-			echo -n $"Service is Already Running."
+		if [ ! -z "$PID" ] && [ ! -z "$PIDB" ]; then
+			echo -n "Service is Already Running."
 			echo
 			return
 		else
@@ -87,30 +92,29 @@ start() {
 			rm -f $LOCKFILE
 		fi
 	fi
-	echo -n $"Starting ServerUsage-Client: "
 	(setsid bash -c "($CMDSTAP | $CMDTCPS) & disown %%") </dev/null >&/dev/null &
 	RETVAL=$?
-	[ $RETVAL = 0 ] && touch $LOCKFILE && success || failure
-	echo
+	[ $RETVAL = 0 ] && touch $LOCKFILE && echo "OK" || echo "ERROR"
 	return $RETVAL
 }
 
 # Restart the service
 stop() {
-	echo -n $"Stopping ServerUsage-Client: "
+	echo -n "Stopping ServerUsage-Client: "
 	# check if the process is running
-	if [ ! -z "`ps ax | grep -v grep | grep $PATH_STAPIO`" ]; then
+	if [ ! -z "$PID" ]; then
 		# kill the process
-		killproc $PATH_STAPIO
+		kill $PID
 		RETVAL=$?
+		echo "OK"
 	else
-		failure $"ServerUsage-Client stop"
+		RETVAL=3
+		echo "Service is not running."
 	fi
-	if [ ! -z "`ps ax | grep -v grep | grep $PATH_TCPSENDER`" ]; then
+	if [ ! -z "$PIDB" ]; then
 		# kill the process
-		killproc $PATH_TCPSENDER
+		kill $PIDB
 	fi
-	echo
 	rm -f $LOCKFILE
 	return $RETVAL
 }
@@ -124,9 +128,19 @@ case "$1" in
 		stop
 		;;
 	status)
-		status $PATH_STAPIO
-		RETVAL=$?
-		status $PATH_TCPSENDER
+		echo -n "ServerUsage-Client status: "
+		if [ ! -z "$PID" ] && [ ! -z "$PIDB" ]; then
+			RETVAL=0
+			echo "Service is running."
+		else
+			if test -f $LOCKFILE ; then
+				RETVAL=2
+				echo "Service is dead and $LOCKFILE lock file exist."
+			else
+				RETVAL=3
+				echo "Service is not running."
+			fi
+		fi
 		;;
 	restart|reload)
 		stop
@@ -139,7 +153,7 @@ case "$1" in
 		fi
 		;;
 	*)
-		echo $"Usage: $0 {start|stop|status|restart|reload|condrestart}"
+		echo "Usage: $0 {start|stop|status|restart|reload|condrestart}"
 		RETVAL=2
 		[ "$1" = 'usage' ] && RETVAL=0
 esac
