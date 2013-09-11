@@ -1,4 +1,4 @@
-6.3.7 (2013-03-19)
+6.3.8 (2013-03-19)
 	- Server init script was rewritten to be compatible with other Linux distributions.
 
 6.3.6 (2012-11-29)

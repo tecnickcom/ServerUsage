@@ -3,7 +3,7 @@
 // File name   : serverusage_client_mdb.c
 // Begin       : 2012-08-14
 // Last Update : 2012-09-18
-// Version     : 6.3.7
+// Version     : 6.3.8
 //
 // Website     : https://github.com/fubralimited/ServerUsage
 //
